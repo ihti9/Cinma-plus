@@ -38,3 +38,17 @@ header nav{flex-shrink:0;margin-inline-start:20px}
 
 /* CINEMA+ v18: cast profiles and responsive filters */
 .cinematic-person[role="button"]{cursor:pointer}.cinematic-person[role="button"]:focus-visible{outline:2px solid #ff4568;outline-offset:4px}.actor-header{display:flex;gap:24px;padding:60px 32px 25px;align-items:flex-start}.actor-header>img{width:180px;max-width:35%;border-radius:14px;object-fit:cover}.actor-header h2{font-size:clamp(24px,3vw,36px);margin:8px 0}.actor-header small{color:#f36c86}.actor-bio{line-height:1.9;max-height:260px;overflow:auto;white-space:pre-line;color:#c9ced8}.actor-works{padding:15px 32px 35px}.actor-works .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:15px}.filters{flex-wrap:wrap}@media(max-width:600px){.actor-header{padding:58px 18px 15px;gap:14px}.actor-header>img{width:110px}.actor-bio{font-size:12px;max-height:210px}.actor-works{padding:12px 18px 25px}.actor-works .grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* CINEMA+ v19: Netflix-inspired continue-watching shelf */
+.continue-shelf{padding-top:22px;padding-bottom:10px}
+.continue-shelf .shelf-head small{color:#aeb7c8;font-size:12px}
+.continue-card{position:relative;text-align:right}
+.continue-poster{position:relative;display:block;width:100%;overflow:hidden;border-radius:12px;background:#191e2a}
+.continue-poster img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover}
+.continue-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:rgba(10,13,20,.8);border:2px solid #fff;color:white;font-size:18px}
+.continue-fallback{display:grid;place-items:center;aspect-ratio:2/3;color:white;font-size:36px}
+.continue-action{display:block;color:#e8b45d;font-size:12px;font-weight:700;margin-top:4px}
+.episode-card{width:100%;font:inherit;color:inherit;text-align:right;cursor:pointer;border:1px solid transparent}
+.episode-card:hover,.episode-card:focus-visible{border-color:#e8b45d;outline:none}
+.episode-card.episode-current{border-color:#e8b45d;background:rgba(232,180,93,.12)}
+.episode-card.episode-current::after{content:'✓ آخر حلقة اخترتها';display:block;color:#e8b45d;font-size:12px;padding:0 12px 12px}
