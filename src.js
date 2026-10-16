@@ -124,6 +124,38 @@ async function enrichDetails(type,id,item){
  return {html:parts.length?`<div class="metadata-extra"><h3>معلومات إضافية</h3><p>${parts.join(' · ')}</p></div>`:''};
 }
 
+// Verified third-party description fallback. Never use a title-only guess for TVmaze.
+async function fallbackSynopsis(type,id,item){
+ let ids;
+ try{ids=await api(`/${type}/${encodeURIComponent(id)}/external_ids`)}catch{return ''}
+ if(OMDB_KEY&&ids?.imdb_id){
+  try{
+   const url=new URL('https://www.omdbapi.com/');
+   url.searchParams.set('apikey',OMDB_KEY);
+   url.searchParams.set('i',ids.imdb_id);
+   url.searchParams.set('plot','full');
+   const response=await fetch(url);
+   if(response.ok){
+    const data=await response.json();
+    if(data.Response==='True'&&data.Plot&&data.Plot!=='N/A')return data.Plot.trim();
+   }
+  }catch(e){console.info('OMDb description unavailable',e)}
+ }
+ if(type==='tv'&&ids?.tvdb_id){
+  try{
+   const response=await fetch('https://api.tvmaze.com/lookup/shows?thetvdb='+encodeURIComponent(ids.tvdb_id));
+   if(response.ok){
+    const data=await response.json();
+    if(data.summary){
+     const plain=data.summary.replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();
+     if(plain)return plain;
+    }
+   }
+  }catch(e){console.info('TVmaze description unavailable',e)}
+ }
+ return '';
+}
+
 // TMDB video metadata is public; only trusted YouTube keys are embedded.
 const validYoutubeKey=key=>typeof key==='string'&&/^[A-Za-z0-9_-]{11}$/.test(key);
 function selectTrailer(videos){
@@ -161,6 +193,7 @@ async function show(id,type){
   const english=await api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null);
   if(request!==modalRequest)return;
   if(String(english?.overview||'').trim())x.overview=english.overview;
+  if(!String(x.overview||'').trim())x.overview=await fallbackSynopsis(type,id,x);
  }
  const extra=await enrichDetails(type,id,x).catch(()=>({}));
  if(request!==modalRequest)return;
