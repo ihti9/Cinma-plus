@@ -10,7 +10,7 @@ const safeSource=(source)=>{
 const mediaKey=({type,id,season,episode})=>type==='tv'?`tv:${id}:s${season}:e${episode}`:`movie:${id}`;
 const htmlEscape=(value)=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 let playerRoot=null;
-export function openCinemaPlayer({type,id,title,season,episode,poster_path,episodes=[]}){
+export function openCinemaPlayer({type,id,title,season,episode,poster_path,episodes=[],seasons=[],loadSeasonEpisodes}){
  closeCinemaPlayer();
  const key=mediaKey({type,id,season,episode});
  const sources=(playbackSources[key]||[]).filter(safeSource);
@@ -20,17 +20,35 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,episo
  playerRoot.className='cinema-player-overlay';
  playerRoot.setAttribute('role','dialog');playerRoot.setAttribute('aria-modal','true');
  playerRoot.setAttribute('aria-label','مشغّل '+heading);
- playerRoot.innerHTML=`<div class="cinema-player-shell dexter-watch"><div class="cinema-player-top"><div class="dexter-watch-brand"><span>CINEMA<span class="dexter-watch-plus">+</span></span><small>صفحة المشاهدة</small></div><button type="button" class="cinema-player-close" aria-label="العودة للتفاصيل">✕ <span>رجوع</span></button></div><div class="dexter-watch-content"><div class="dexter-watch-main"><div class="dexter-watch-title"><small>${type==='tv'?'مسلسل · الموسم '+season+' · الحلقة '+episode:'فيلم'}</small><h2>${htmlEscape(heading)}</h2></div><div class="cinema-player-screen" id="cinema-player-screen"></div><div class="dexter-watch-toolbar"><span>▶ مشغّل CINEMA+</span><span>اختر سيرفرًا للمشاهدة</span></div><section class="cinema-player-controls"><div class="cinema-watch-meta"><span>سيرفرات المشاهدة</span><span>${sources.length} سيرفر متاح</span></div><div class="cinema-server-list" id="cinema-server-list"></div><p class="cinema-player-note">تُربط مصادر الفيديو المرخّصة لاحقًا. السيرفرات غير المضافة لن تعمل.</p></section><div class="dexter-watch-navigation">${type==='tv'&&episodes.length?'<button type="button" id="dexter-prev-episode">← الحلقة السابقة</button><button type="button" id="dexter-next-episode">الحلقة التالية ←</button>':''}</div></div>${type==='tv'?'<aside class="cinema-watch-episodes dexter-watch-sidebar"><div class="dexter-sidebar-head"><h3>قائمة الحلقات</h3><small>الموسم '+season+'</small></div><div class="cinema-watch-episode-list">'+episodes.map(ep=>'<button type="button" data-watch-episode="'+Number(ep.number)+'" class="'+(Number(ep.number)===Number(episode)?'active':'')+'">'+(ep.still_path?'<img src="https://image.tmdb.org/t/p/w300'+encodeURI(ep.still_path)+'" loading="lazy" alt="">':'<span class="dexter-episode-placeholder">▶</span>')+'<span><strong>الحلقة '+Number(ep.number)+'</strong><small>'+htmlEscape(ep.name||'')+'</small></span></button>').join('')+'</div></aside>':''}</div></div>`;
+ playerRoot.innerHTML=`<div class="cinema-player-shell dexter-watch"><div class="cinema-player-top"><div class="dexter-watch-brand"><span>CINEMA<span class="dexter-watch-plus">+</span></span><small>صفحة المشاهدة</small></div><button type="button" class="cinema-player-close" aria-label="العودة للتفاصيل">✕ <span>رجوع</span></button></div><div class="dexter-watch-content"><div class="dexter-watch-main"><div class="dexter-watch-title"><small>${type==='tv'?'مسلسل · الموسم '+season+' · الحلقة '+episode:'فيلم'}</small><h2>${htmlEscape(heading)}</h2></div><div class="cinema-player-screen" id="cinema-player-screen"></div><div class="dexter-watch-toolbar"><span>▶ مشغّل CINEMA+</span><span>اختر سيرفرًا للمشاهدة</span></div><section class="cinema-player-controls"><div class="cinema-watch-meta"><span>سيرفرات المشاهدة</span><span>${sources.length} سيرفر متاح</span></div><div class="cinema-server-list" id="cinema-server-list"></div><p class="cinema-player-note">تُربط مصادر الفيديو المرخّصة لاحقًا. السيرفرات غير المضافة لن تعمل.</p></section><div class="dexter-watch-navigation">${type==='tv'&&episodes.length?'<button type="button" id="dexter-prev-episode">← الحلقة السابقة</button><button type="button" id="dexter-next-episode">الحلقة التالية ←</button>':''}</div></div>${type==='tv'?'<aside class="cinema-watch-episodes dexter-watch-sidebar"><div class="dexter-sidebar-head"><h3>قائمة الحلقات</h3><label class="dexter-season-label">الجزء <select id="dexter-season-select" aria-label="اختر الموسم">'+(seasons.length?seasons:[{number:season,name:'الموسم '+season}]).map(v=>'<option value="'+Number(v.number)+'" '+(Number(v.number)===Number(season)?'selected':'')+'>'+htmlEscape(v.name||'الموسم '+v.number)+'</option>').join('')+'</select></label></div><div class="cinema-watch-episode-list">'+episodes.map(ep=>'<button type="button" data-watch-episode="'+Number(ep.number)+'" class="'+(Number(ep.number)===Number(episode)?'active':'')+'">'+(ep.still_path?'<img src="https://image.tmdb.org/t/p/w300'+encodeURI(ep.still_path)+'" loading="lazy" alt="">':'<span class="dexter-episode-placeholder">▶</span>')+'<span><strong>الحلقة '+Number(ep.number)+'</strong><small>'+htmlEscape(ep.name||'')+'</small></span></button>').join('')+'</div></aside>':''}</div></div>`;
  document.body.appendChild(playerRoot);
  document.body.classList.add('cinema-player-open');
  const screen=playerRoot.querySelector('#cinema-player-screen');
  const list=playerRoot.querySelector('#cinema-server-list');
  const closeButton=playerRoot.querySelector('.cinema-player-close');
  closeButton.onclick=closeCinemaPlayer;
- playerRoot.querySelectorAll('[data-watch-episode]').forEach(button=>button.onclick=()=>openCinemaPlayer({type,id,title,season,episode:Number(button.dataset.watchEpisode),poster_path,episodes}));
+ const seasonSelect=playerRoot.querySelector('#dexter-season-select');
+ if(seasonSelect&&typeof loadSeasonEpisodes==='function'){
+  seasonSelect.onchange=async()=>{
+   const nextSeason=Number(seasonSelect.value);
+   seasonSelect.disabled=true;
+   const episodeList=playerRoot.querySelector('.cinema-watch-episode-list');
+   const original=episodeList.innerHTML;
+   episodeList.innerHTML='<p class="dexter-season-loading">جاري تحميل حلقات الجزء...</p>';
+   try{
+    const nextEpisodes=await loadSeasonEpisodes(nextSeason);
+    if(!seasonSelect.isConnected)return;
+    if(!nextEpisodes.length){episodeList.innerHTML='<p class="dexter-season-loading">لا تتوفر حلقات لهذا الجزء.</p>';seasonSelect.disabled=false;return}
+    openCinemaPlayer({type,id,title,season:nextSeason,episode:Number(nextEpisodes[0].number),poster_path,episodes:nextEpisodes,seasons,loadSeasonEpisodes});
+   }catch{
+    if(seasonSelect.isConnected){episodeList.innerHTML=original;seasonSelect.disabled=false;seasonSelect.value=String(season)}
+   }
+  };
+ }
+ playerRoot.querySelectorAll('[data-watch-episode]').forEach(button=>button.onclick=()=>openCinemaPlayer({type,id,title,season,episode:Number(button.dataset.watchEpisode),poster_path,episodes,seasons,loadSeasonEpisodes}));
  if(type==='tv'&&episodes.length){
   const index=episodes.findIndex(ep=>Number(ep.number)===Number(episode));
-  const goTo=offset=>{const next=episodes[index+offset];if(next)openCinemaPlayer({type,id,title,season,episode:Number(next.number),poster_path,episodes})};
+  const goTo=offset=>{const next=episodes[index+offset];if(next)openCinemaPlayer({type,id,title,season,episode:Number(next.number),poster_path,episodes,seasons,loadSeasonEpisodes})};
   const prev=playerRoot.querySelector('#dexter-prev-episode'),next=playerRoot.querySelector('#dexter-next-episode');
   if(prev){prev.disabled=index<=0;prev.onclick=()=>goTo(-1)}
   if(next){next.disabled=index<0||index>=episodes.length-1;next.onclick=()=>goTo(1)}
