@@ -4,6 +4,12 @@ const KEY=import.meta.env.VITE_TMDB_API_KEY;
 const TOKEN=import.meta.env.VITE_TMDB_READ_TOKEN;
 const OMDB_KEY=import.meta.env.VITE_OMDB_API_KEY;
 const base='https://api.themoviedb.org/3';
+const playerImdbCache=new Map();
+async function playerImdbId(type,id){
+ const key=type+':'+id;
+ if(!playerImdbCache.has(key))playerImdbCache.set(key,api('/'+type+'/'+encodeURIComponent(id)+'/external_ids').then(data=>data?.imdb_id||'').catch(()=>''));
+ return playerImdbCache.get(key);
+}
 const img=(p,size='w500')=>p?`https://image.tmdb.org/t/p/${size}${p}`:'';
 const demo=[{id:1,title:'رحلة إلى المجهول',original_title:'The Unknown Journey',overview:'مغامرة مشوقة في عالم من الأسرار والاكتشافات.',vote_average:8.6,release_date:'2025-03-10',genre_ids:[12],media_type:'movie',poster_path:null,backdrop_path:null},{id:2,title:'المدينة الأخيرة',overview:'حين تتغير المدينة، تبدأ حكاية جديدة.',vote_average:8.2,release_date:'2024-09-11',genre_ids:[18],media_type:'tv'},{id:3,title:'ما وراء النجوم',overview:'رحلة خيال علمي عبر حدود الكون.',vote_average:7.9,release_date:'2025-01-02',genre_ids:[878],media_type:'movie'},{id:4,title:'الظل',overview:'لغز يختبئ خلف كل باب.',vote_average:8.1,release_date:'2023-11-10',genre_ids:[9648],media_type:'tv'},{id:5,title:'ليلة في البحر',overview:'حكاية إنسانية عن الشجاعة والأمل.',vote_average:7.8,release_date:'2025-05-14',genre_ids:[18],media_type:'movie'},{id:6,title:'الطريق',overview:'أصدقاء يجتمعون في رحلة تغير حياتهم.',vote_average:8.0,release_date:'2024-02-22',genre_ids:[12],media_type:'movie'}];
 let stored=[];
@@ -314,7 +320,7 @@ async function show(id,type){
    data.episodes=await Promise.all((data.episodes||[]).map(async ep=>({...ep,overview:await arabicDescription(ep.overview)})));
    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
    target.innerHTML=(data?.episodes||[]).length?`<div class="episode-grid">${data.episodes.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}">${ep.still_path?`<img src="${img(ep.still_path,'w300')}" loading="lazy" alt="">`:''}<div><strong>${ep.episode_number}. ${escapeHTML(/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</strong><small>${ep.runtime?`${ep.runtime} دقيقة · `:''}${escapeHTML(ep.air_date||'')} ${ep.vote_average>0?` · ★ ${Number(ep.vote_average).toFixed(1)}`:''} ${ep.air_date&&ep.air_date>new Date().toISOString().slice(0,10)?' · قادمة':''}</small><p>${escapeHTML(ep.overview||'لا يوجد وصف للحلقة.')}</p></div></button>`).join('')}</div>`:'<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';
-   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=()=>{rememberEpisode(x,season,el.dataset.episode);openCinemaPlayer({type:'tv',id,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
+   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=async()=>{rememberEpisode(x,season,el.dataset.episode);const imdbId=await playerImdbId('tv',id);openCinemaPlayer({type:'tv',id,imdbId,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
   }catch{if(currentSeasonRequest===seasonRequest&&target.isConnected)target.innerHTML='<p class="trailer-empty">تعذر تحميل الحلقات، حاول مرة أخرى.</p>'}
  }
  if(seasonPicker){seasonPicker.onchange=()=>loadEpisodes(seasonPicker.value);const initial=seasons.some(v=>v.season_number===resume?.season)?resume.season:seasons[0]?.season_number;if(initial){seasonPicker.value=String(initial);loadEpisodes(initial)}}
@@ -330,7 +336,7 @@ async function show(id,type){
   try{localStorage.setItem('cinema_watchlist_v2',JSON.stringify(state.watchlist))}catch(e){console.warn('Unable to save watchlist',e)}
   close();render();show(id,type);
  };
- if(type==='movie'){document.querySelector('#open-movie-player').onclick=()=>openCinemaPlayer({type:'movie',id,title:title(x),poster_path:x.backdrop_path||x.poster_path});}
+ if(type==='movie'){document.querySelector('#open-movie-player').onclick=async()=>openCinemaPlayer({type:'movie',id,imdbId:await playerImdbId('movie',id),title:title(x),poster_path:x.backdrop_path||x.poster_path});}
  document.querySelector('#save').onclick=()=>setWatchStatus(saved?'none':'plan');
  document.querySelector('#watch-status').onchange=e=>setWatchStatus(e.target.value);
 }
