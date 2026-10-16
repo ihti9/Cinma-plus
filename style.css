@@ -6,3 +6,12 @@
 
 /* Trailer modal: responsive 16:9 YouTube embed, created only after click */
 .trailer-section{margin:22px 0}.trailer-section h3{margin-bottom:12px}.trailer-placeholder,.trailer-player{width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#101521}.trailer-placeholder{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;border:1px solid #303748}.trailer-placeholder span,.trailer-empty{color:#aab1c1;font-size:14px}.trailer-player{display:block}.trailer-loading{padding:60px 24px;text-align:center;color:#fff}
+
+/* Nuvio-inspired collections, responsive and RTL */
+.discovery{max-width:1400px;margin:0 auto;padding:28px clamp(16px,4vw,56px) 8px;direction:rtl}
+.discover-heading h2{font-size:clamp(24px,3vw,34px);margin:5px 0}.discover-heading small{color:#fb4b65}.discover-heading p{color:#a8aebb;margin:0 0 26px}
+.collection-group{margin:26px 0 32px}.collection-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.collection-heading h3{font-size:21px;margin:0}.collection-heading span{color:#89909d;font-size:12px}
+.collection-scroll{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#323849 transparent}
+.collection-tile{flex:0 0 clamp(145px,20vw,230px);min-height:110px;border:1px solid #303541;border-radius:15px;background:radial-gradient(ellipse at 80% 0%,#27354a 0%,transparent 60%),linear-gradient(145deg,#1c2029,#0b0e14);color:white;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;scroll-snap-align:start;transition:transform .2s,border-color .2s;padding:16px;text-align:center}
+.collection-tile:hover,.collection-tile:focus-visible{border-color:#fa425e;transform:translateY(-3px)}.collection-symbol{font-weight:900;font-size:clamp(18px,2.3vw,27px);letter-spacing:-.5px}.collection-label{font-size:13px;color:#d1d5df}.collection-group:nth-of-type(3) .collection-tile:nth-child(1) .collection-symbol{color:#e50914}.collection-group:nth-of-type(3) .collection-tile:nth-child(2) .collection-symbol{color:#60b8ff}
+@media(max-width:650px){.discovery{padding:24px 16px 0}.collection-group{margin:24px 0}.collection-tile{flex-basis:155px;min-height:102px}.collection-heading h3{font-size:18px}}
