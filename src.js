@@ -42,6 +42,14 @@ async function api(path){
  if(!KEY&&!TOKEN)return null;
  const cached=metadataCache.get(path);
  if(cached&&Date.now()-cached.time<300000)return cached.data;
+ // Reuse season lists across navigation and page reloads in this browser session.
+ const seasonRequest=/^\/tv\/\d+\/season\/\d+\?/.test(path);
+ const storageKey='cinema_tmdb_'+path;
+ if(seasonRequest){
+  try{const saved=JSON.parse(sessionStorage.getItem(storageKey)||'null');
+   if(saved&&Date.now()-saved.time<30*60*1000){metadataCache.set(path,saved);return saved.data}
+  }catch{}
+ }
  if(metadataPending.has(path))return metadataPending.get(path);
  const request=(async()=>{
   const url=new URL(base+path);
@@ -52,6 +60,7 @@ async function api(path){
   const data=await r.json();
   if(metadataCache.size>=120)metadataCache.delete(metadataCache.keys().next().value);
   metadataCache.set(path,{time:Date.now(),data});
+  if(seasonRequest){try{sessionStorage.setItem(storageKey,JSON.stringify({time:Date.now(),data}))}catch{}}
   return data;
  })();
  metadataPending.set(path,request);
@@ -330,8 +339,34 @@ async function show(id,type){
    // Show the episode list immediately after TMDB responds. Enrichment must not block navigation.
    // Optional descriptions and translations can be fetched separately in future.
    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
-   target.innerHTML=(data?.episodes||[]).length?`<div class="episode-grid">${data.episodes.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}"><div><strong>الحلقة ${ep.episode_number}</strong><span>${escapeHTML(/^episode\\s*\\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</span></div></button>`).join('')}</div>`:'<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';
-   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=async()=>{rememberEpisode(x,season,el.dataset.episode);const anime=isAnime(x);const [imdbId,metadata]=await Promise.all([anime?Promise.resolve(''):playerImdbId('tv',id),anime?animeMetadata(x):Promise.resolve({})]);openCinemaPlayer({type:'tv',id,imdbId,isAnime:anime,anilistId:metadata.anilistId||0,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
+   const allEpisodes=data?.episodes||[];
+   const episodeGrid=document.createElement('div');
+   episodeGrid.className='episode-grid';
+   target.replaceChildren(episodeGrid);
+   if(!allEpisodes.length){target.innerHTML='<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';return}
+   // Only create the first 30 cards initially; append more on demand.
+   let rendered=0;
+   const appendEpisodes=()=>{
+    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!episodeGrid.isConnected)return;
+    const batch=allEpisodes.slice(rendered,rendered+30);
+    if(!batch.length)return;
+    episodeGrid.insertAdjacentHTML('beforeend',batch.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}"><div><strong>الحلقة ${ep.episode_number}</strong><span>${escapeHTML(/^episode\\s*\\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</span></div></button>`).join(''));
+    rendered+=batch.length;
+    episodeGrid.querySelectorAll('[data-episode]:not([data-bound])').forEach(el=>{
+     el.dataset.bound='1';
+     el.onclick=async()=>{rememberEpisode(x,season,el.dataset.episode);const anime=isAnime(x);const [imdbId,metadata]=await Promise.all([anime?Promise.resolve(''):playerImdbId('tv',id),anime?animeMetadata(x):Promise.resolve({})]);openCinemaPlayer({type:'tv',id,imdbId,isAnime:anime,anilistId:metadata.anilistId||0,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:allEpisodes.map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});};
+    });
+    if(rendered<allEpisodes.length){
+     moreEpisodes.textContent='عرض المزيد من الحلقات ('+(allEpisodes.length-rendered)+')';
+     episodeGrid.after(moreEpisodes);
+    }else moreEpisodes.remove();
+   };
+   const moreEpisodes=document.createElement('button');
+   moreEpisodes.type='button';moreEpisodes.className='episode-load-more';
+   moreEpisodes.style.cssText='display:block;margin:16px auto;padding:12px 24px;border-radius:10px';
+   moreEpisodes.onclick=appendEpisodes;
+   appendEpisodes();
+
   }catch{if(currentSeasonRequest===seasonRequest&&target.isConnected)target.innerHTML='<p class="trailer-empty">تعذر تحميل الحلقات، حاول مرة أخرى.</p>'}
  }
  if(seasonPicker){seasonPicker.onchange=()=>loadEpisodes(seasonPicker.value);const initial=seasons.some(v=>v.season_number===resume?.season)?resume.season:seasons[0]?.season_number;if(initial){seasonPicker.value=String(initial);loadEpisodes(initial)}}
