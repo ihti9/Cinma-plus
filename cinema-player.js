@@ -1,8 +1,9 @@
 import { playbackSources } from './playback-sources.js';
 
 const ADDON_KEY='cinema_stremio_addon_v1';
+const DEFAULT_ADDON='https://torrentio.strem.fun/manifest.json';
 const getAddonBase=()=>{
- try{const value=localStorage.getItem(ADDON_KEY);if(!value)return '';const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password)return '';return u.href.replace(/manifest[.]json\/?$/,'').replace(/\/$/,'')}catch{return ''}
+ try{const value=localStorage.getItem(ADDON_KEY)||DEFAULT_ADDON;const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password)return '';return u.href.replace(/manifest[.]json\/?$/,'').replace(/\/$/,'')}catch{return ''}
 };
 async function getStremioSources(imdbId,type,season,episode){
  const base=getAddonBase();if(!base||!/^tt[0-9]+$/.test(imdbId||''))return [];
@@ -79,9 +80,10 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  playerRoot._onKey=onKey;document.addEventListener('keydown',onKey);
  closeButton.focus();
 
+ const rootForAddon=playerRoot;
  const addonInput=playerRoot.querySelector('#cinema-addon-url');
  const addonStatus=playerRoot.querySelector('#cinema-addon-status');
- addonInput.value=localStorage.getItem(ADDON_KEY)||'';
+ addonInput.value=localStorage.getItem(ADDON_KEY)||DEFAULT_ADDON;
  playerRoot.querySelector('#cinema-addon-save').onclick=()=>{
   try{const u=new URL(addonInput.value.trim());if(u.protocol!=='https:'||u.username||u.password)throw Error('invalid');localStorage.setItem(ADDON_KEY,u.href);loadAddon()}
   catch{addonStatus.textContent='أدخل رابط HTTPS صالحًا.'}
@@ -90,20 +92,21 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   if(!getAddonBase())return;
   if(!imdbId){addonStatus.textContent='لا يوجد معرّف IMDb لهذا العنوان.';return}
   try{
-   addonStatus.textContent='جاري تحميل مصادر Stremio...';
+   addonStatus.textContent='جاري البحث عن مصدر تشغيل مباشر...';
    const items=(await getStremioSources(imdbId,type,season,episode)).filter(safeSource);
-   if(!screen.isConnected)return;
+   if(!screen.isConnected||playerRoot!==rootForAddon)return;
    list.querySelectorAll('[data-server^="stremio-"]').forEach(el=>el.remove());
    items.forEach(source=>{
     const btn=document.createElement('button');btn.type='button';btn.dataset.server=source.id;btn.textContent=source.name;btn.onclick=()=>selectSource(source);list.appendChild(btn);
    });
-   addonStatus.textContent=items.length?'مصادر مباشرة متاحة: '+items.length:'لم تتوفر روابط MP4/HLS مباشرة.';
+   addonStatus.textContent=items.length?'مصادر مباشرة متاحة: '+items.length:'لم توفر الإضافة رابط MP4/HLS مباشرًا؛ روابط التورنت تحتاج خادم بث.';
    if(items.length&&!sources.length)selectSource(items[0]);
+   if(!items.length&&!sources.length)screen.innerHTML='<div class="cinema-player-empty"><span>▶</span><h3>لا يوجد رابط تشغيل مباشر</h3><p>لم توفر إضافة Stremio فيديو MP4/HLS متوافقًا. روابط التورنت تحتاج خادم بث.</p></div>';
   }catch{addonStatus.textContent='تعذر الاتصال بالإضافة؛ قد تكون CORS غير مفعّلة.'}
  }
  loadAddon();
  if(!sources.length){
-  screen.innerHTML=`<div class="cinema-player-empty"><span>▶</span><h3>المشغّل جاهز</h3><p>لم تتم إضافة سيرفر مشاهدة لهذا العنوان بعد.</p></div>`;
+  screen.innerHTML=`<div class="cinema-player-empty"><span>▶</span><h3>جاري البحث عن رابط تشغيل</h3><p>سيبدأ الفيديو تلقائيًا عند توفر مصدر مباشر متوافق.</p></div>`;
   list.innerHTML='<span class="cinema-server-unavailable">لا توجد سيرفرات متاحة حاليًا</span>';
   return;
  }
