@@ -1,6 +1,6 @@
 import { playbackSources } from './playback-sources.js';
 
-const DEMO_VIDEO={id:'demo-bbb',name:'▶ تجربة تشغيل فيديو MP4',kind:'mp4',url:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'};
+const DEMO_VIDEO={id:'demo-cc0',name:'▶ تجربة تشغيل فيديو MP4',kind:'mp4',url:'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'};
 const ADDON_KEY='cinema_stremio_addon_v1';
 const DEFAULT_ADDON='https://torrentio.strem.fun/manifest.json';
 const getAddonBase=()=>{
@@ -146,19 +146,37 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=poster_path?`https://image.tmdb.org/t/p/w780${poster_path}`:'';
   // Torrent entries point to an authorized HTTPS streaming gateway, not a magnet URI.
   video.src=source.url;video.className='cinema-native-video';
-  if(source.id.startsWith('library-'))video.autoplay=true;
-  if(source.id==='demo-bbb')video.poster='';
+  // Playback is initiated by an explicit user selection, preserving iOS gesture policy.
+  video.autoplay=false;
+  if(source.id==='demo-cc0')video.poster='';
   let lastSaved=0;
   const saved=positions[key]?.[source.id];
   video.addEventListener('loadedmetadata',()=>{if(saved?.time>5&&Number.isFinite(video.duration)&&saved.time<video.duration-5)video.currentTime=saved.time});
   video.addEventListener('timeupdate',()=>{if(video.currentTime-lastSaved>=5){lastSaved=video.currentTime;savePosition(video)}});
   video.addEventListener('pause',()=>savePosition(video));
-  video.addEventListener('ended',()=>{const data=safeRead(PLAYER_POSITION_KEY);if(data[key])delete data[key][source.id];safeWrite(PLAYER_POSITION_KEY,data)});
+  video.addEventListener('ended',()=>{
+   const data=safeRead(PLAYER_POSITION_KEY);if(data[key])delete data[key][source.id];safeWrite(PLAYER_POSITION_KEY,data);
+   if(type!=='tv'||source.id==='demo-cc0')return;
+   const index=episodes.findIndex(ep=>Number(ep.number)===Number(episode));
+   const next=episodes[index+1];if(index<0||!next)return;
+   const nextKey=mediaKey({type,id,season,episode:Number(next.number)});
+   if(!librarySource(nextKey).length&&!(playbackSources[nextKey]||[]).some(safeSource))return;
+   const notice=document.createElement('button');notice.type='button';notice.className='cinema-next-episode';notice.textContent='▶ تشغيل الحلقة التالية: '+Number(next.number);
+   notice.style.cssText='display:block;margin:12px auto;padding:12px 20px;border-radius:10px;cursor:pointer';
+   notice.onclick=()=>openCinemaPlayer({type,id,title,season,episode:Number(next.number),poster_path,imdbId,episodes,seasons,loadSeasonEpisodes});screen.appendChild(notice);
+  });
   if(source.kind==='torrent'&&source.streamKind==='hls'&&!video.canPlayType('application/vnd.apple.mpegurl')){
    const note=document.createElement('p');note.className='cinema-player-error';note.textContent='هذا المتصفح لا يدعم بث HLS مباشرة. استخدم Safari أو مصدر MP4.';screen.appendChild(note);
   }
   video.addEventListener('error',()=>{const note=document.createElement('p');note.className='cinema-player-error';note.textContent=source.id==='demo-bbb'?'تعذر تحميل فيديو التجربة. افتح الرابط مباشرة أو جرّب شبكة أخرى.':'تعذر تشغيل هذا المصدر. جرّب سيرفرًا آخر.';screen.appendChild(note)});
   video.dataset.server=source.id;screen.appendChild(video);
+  if(source.kind==='hls'&&!video.canPlayType('application/vnd.apple.mpegurl')){
+   const note=document.createElement('p');note.className='cinema-player-error';note.textContent='بث HLS يحتاج دعم المتصفح أو مكتبة HLS.js. جرّب Safari على الآيفون.';screen.appendChild(note);
+  }
+  if(source.id==='demo-cc0'){
+   const note=document.createElement('p');note.style.cssText='font-size:12px;text-align:center;padding:6px';note.textContent='فيديو اختبار MDN — ليس '+heading;screen.appendChild(note);
+  }
+  video.play().catch(()=>{});
   if(type==='tv'){
    const progress=safeRead(EPISODE_PROGRESS_KEY);
    progress['tv:'+id]={...(progress['tv:'+id]||{}),id:Number(id),media_type:'tv',title,poster_path:poster_path||'',season:Number(season),episode:Number(episode),updated:Date.now()};
