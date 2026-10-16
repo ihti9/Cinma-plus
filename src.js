@@ -18,7 +18,7 @@ const title=x=>x.title||x.name||x.original_title||x.original_name||'بدون ع�
 const card=x=>`<article class="movie" data-id="${x.id}" data-type="${x.media_type|| (x.first_air_date?'tv':'movie')}"><div class="poster">${x.poster_path?`<img loading="lazy" src="${img(x.poster_path)}" alt=""/>`:`<div class="placeholder">🎬</div>`}<span class="rating">★ ${(x.vote_average||0).toFixed(1)}</span></div><h3>${escapeHTML(title(x))}</h3><p>${year(x)} · ${x.media_type==='tv'||x.first_air_date?'مسلسل':'فيلم'}</p></article>`;
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){const oldSearch=document.querySelector('#search');const keepSearchFocus=document.activeElement===oldSearch;const cursor=keepSearchFocus?oldSearch.selectionStart:null;let items=state.view==='saved'?state.watchlist.filter(x=>(!state.genre||(x.genre_ids||[]).includes(Number(state.genre)))&&(!state.year||year(x)===state.year)):state.items;const hero=items[0]||demo[0];document.querySelector('#app').innerHTML=`<header><a class="brand" href="#">CINEMA<span>+</span></a><nav><button data-view="trending" class="${state.view==='trending'?'active':''}">الرئيسية</button><button data-view="movie" class="${state.view==='movie'?'active':''}">أفلام</button><button data-view="tv" class="${state.view==='tv'?'active':''}">مسلسلات</button><button data-view="saved" class="${state.view==='saved'?'active':''}">قائمتي</button></nav><button id="menu" aria-label="القائمة">☰</button></header><main><section class="hero" style="${hero.backdrop_path?`background-image:linear-gradient(90deg,rgba(9,11,18,.8),rgba(9,11,18,.25)),linear-gradient(0deg,#090b12,transparent),url('${img(hero.backdrop_path,'original')}')`:''}"><div class="hero-content"><div class="eyebrow">✦ اكتشف عالم الترفيه</div><h1>قصص تستحق<br><em>المشاهدة</em></h1><p>اكتشف أحدث الأفلام والمسلسلات وتفاصيلها وتقييماتها في مكان واحد.</p><button class="primary" id="explore">استكشف الآن ←</button></div></section>${state.view==='trending'?discoveryMarkup()+editorialMarkup():''}<section class="catalog" id="catalog"><div class="section-head"><div><small>مكتبتك السينمائية</small><h2>${({trending:'الأكثر رواجًا',movie:'أحدث الأفلام',tv:'المسلسلات الرائجة',saved:'قائمتي المفضلة',search:'نتائج البحث',collection:state.collectionLabel||'المجموعة'})[state.view]}</h2></div><div class="search"><span>⌕</span><input id="search" placeholder="ابحث عن فيلم أو مسلسل..." value="${escapeHTML(state.query)}" aria-label="بحث" /></div></div>${state.error?`<p class="notice">${escapeHTML(state.error)}</p>`:''}<div class="filters"><label>التصنيف <select id="genre"><option value="">الكل</option>${Object.entries(genres).map(([id,label])=>`<option value="${id}" ${state.genre===id?'selected':''}>${label}</option>`).join('')}</select></label><label>السنة <select id="year"><option value="">كل السنوات</option>${Array.from({length:25},(_,i)=>String(new Date().getFullYear()-i)).map(y=>`<option value="${y}" ${state.year===y?'selected':''}>${y}</option>`).join('')}</select></label><label>الترتيب <select id="sort"><option value="popularity.desc" ${state.sort==='popularity.desc'?'selected':''}>الأكثر شعبية</option><option value="vote_average.desc" ${state.sort==='vote_average.desc'?'selected':''}>الأعلى تقييمًا</option><option value="primary_release_date.desc" ${state.sort==='primary_release_date.desc'?'selected':''}>الأحدث</option></select></label></div><div class="grid">${state.loading?'<p class="empty">جاري تحميل النتائج...</p>':items.length?items.map(card).join(''):'<p class="empty">لا توجد نتائج حاليًا.</p>'}</div>${!state.loading&&state.view!=='saved'&&state.view!=='search'&&state.page<state.totalPages?'<button class="primary more" id="more">عرض المزيد</button>':''}</section></main><footer>© ${new Date().getFullYear()} CINEMA+ · بيانات الأفلام مقدمة من TMDB · هذا الموقع غير تابع لـ TMDB</footer><div id="modal-root"></div>`;bind();if(keepSearchFocus){const search=document.querySelector('#search');search?.focus({preventScroll:true});if(cursor!==null)search?.setSelectionRange(cursor,cursor);}}
-function bind(){document.querySelectorAll(".shelf-card").forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelectorAll("[data-shelf]").forEach(el=>el.onclick=()=>openShelf(el.dataset.shelf));document.querySelectorAll("[data-collection]").forEach(el=>el.onclick=()=>openCollection(el.dataset.collection));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>load(b.dataset.view));document.querySelector('#explore').onclick=()=>document.querySelector('#catalog').scrollIntoView({behavior:'smooth'});document.querySelector('#search').oninput=e=>{const q=e.target.value;state.query=q;clearTimeout(window.searchTimer);window.searchTimer=setTimeout(()=>{if(q.trim())load('search',q);else load('trending')},450)};document.querySelectorAll('.movie').forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelector('#menu').onclick=()=>document.querySelector('nav').classList.toggle('open');document.querySelectorAll('#genre,#year,#sort').forEach(el=>el.onchange=e=>{state[e.target.id]=e.target.value;load(state.view==='collection'?'trending':state.view,state.query)});const more=document.querySelector('#more');if(more)more.onclick=()=>state.view==='collection'&&activeShelf?loadShelfMore():load(state.view,'',true)}
+function bind(){document.querySelectorAll(".shelf-card").forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelectorAll("[data-shelf]").forEach(el=>el.onclick=()=>openShelf(el.dataset.shelf));document.querySelectorAll("[data-collection]").forEach(el=>el.onclick=()=>openCollection(el.dataset.collection));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>load(b.dataset.view));document.querySelector('#explore').onclick=()=>document.querySelector('#catalog').scrollIntoView({behavior:'smooth'});document.querySelector('#search').oninput=e=>{const q=e.target.value;state.query=q;clearTimeout(window.searchTimer);window.searchTimer=setTimeout(()=>{if(q.trim())load('search',q);else load('trending')},450)};document.querySelectorAll('.movie').forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelector('#menu').onclick=()=>document.querySelector('nav').classList.toggle('open');document.querySelectorAll('#genre,#year,#sort').forEach(el=>el.onchange=e=>{state[e.target.id]=e.target.value;load(state.view==='collection'?'trending':state.view,state.query)});const more=document.querySelector('#more');if(more)more.onclick=()=>state.view==='collection'?(activeShelf?loadShelfMore():loadCollectionMore()):load(state.view,'',true)}
 async function load(view='trending',q='',append=false){
  const request=++state.request;
  if(!append){activeShelf=null;state.view=view;state.query=q;state.page=1;state.items=[];}
@@ -207,26 +207,57 @@ async function loadShelfMore(){
  finally{shelfBusy=false;if(token===state.request)render()}
 }
 
+let currentCollectionKey='';
+let collectionPage=0;
+let collectionMoviePages=0;
+let collectionTvPages=0;
+function collectionPaths(key){
+ if(key==='trending')return ['/trending/all/week'];
+ if(key==='latest-movies')return ['/discover/movie?sort_by=primary_release_date.desc&vote_count.gte=10'];
+ if(key==='latest-tv')return ['/discover/tv?sort_by=first_air_date.desc&vote_count.gte=10'];
+ if(key==='popular-movies')return ['/movie/popular'];
+ if(key==='popular-tv')return ['/tv/popular'];
+ if(key==='top-rated')return ['/movie/top_rated'];
+ if(key.startsWith('network:'))return ['/discover/tv?with_networks='+encodeURIComponent(key.split(':')[1])];
+ if(key.startsWith('genre:'))return ['/discover/movie?with_genres='+encodeURIComponent(key.split(':')[1]),'/discover/tv?with_genres='+encodeURIComponent(key.split(':')[1])];
+ if(key.startsWith('provider:')){
+  const provider=encodeURIComponent(key.split(':')[1]);
+  return ['/discover/movie?with_watch_providers='+provider+'&watch_region=SA','/discover/tv?with_watch_providers='+provider+'&watch_region=SA'];
+ }
+ return [];
+}
+async function fetchCollectionPage(key,page){
+ const paths=collectionPaths(key);
+ const data=await Promise.all(paths.map(async path=>{
+  const result=await api(path+(path.includes('?')?'&':'?')+'page='+page);
+  return {results:(result?.results||[]).map(x=>({...x,media_type:path.includes('/tv')?'tv':path.includes('/movie')?'movie':typeOf(x)})),pages:Math.min(result?.total_pages||0,500)};
+ }));
+ return {items:data.flatMap(d=>d.results).filter(x=>x.media_type!=='person'),totalPages:Math.max(1,...data.map(d=>d.pages))};
+}
 async function openCollection(key){
- const request=++state.request;activeShelf=null;
- state.view='collection';state.query='';state.genre='';state.year='';state.page=1;state.loading=true;state.items=[];state.error='';
+ const request=++state.request;activeShelf=null;currentCollectionKey=key;collectionPage=1;
+ state.view='collection';state.query='';state.genre='';state.year='';state.page=1;state.totalPages=2;state.loading=true;state.items=[];state.error='';
  const found=collectionGroups.flatMap(g=>g.items).find(item=>item[2]===key);
- const label=found?.[1]||'المجموعة';
- state.collectionLabel=label;
+ state.collectionLabel=found?.[1]||'المجموعة';
  render();document.querySelector('#catalog')?.scrollIntoView({behavior:'smooth'});
- let path='';
- if(key==='trending')path='/trending/all/week';
- else if(key==='latest-movies')path='/discover/movie?sort_by=primary_release_date.desc&vote_count.gte=10';
- else if(key==='latest-tv')path='/discover/tv?sort_by=first_air_date.desc&vote_count.gte=10';
- else if(key==='popular-movies')path='/movie/popular';
- else if(key==='popular-tv')path='/tv/popular';
- else if(key==='top-rated')path='/movie/top_rated';
- else if(key.startsWith('network:'))path='/discover/tv?with_networks='+encodeURIComponent(key.split(':')[1]);
- else if(key.startsWith('genre:'))path='/discover/movie?with_genres='+encodeURIComponent(key.split(':')[1]);
- else if(key.startsWith('provider:'))path='/discover/movie?with_watch_providers='+encodeURIComponent(key.split(':')[1])+'&watch_region=SA';
- try{const data=await api(path);if(request!==state.request)return;state.items=(data?.results||[]).filter(x=>x.media_type!=='person').map(x=>({...x,media_type:typeOf(x)}));state.totalPages=1;if(!state.items.length)state.error='لا توجد أعمال متاحة لهذا القسم حاليًا.'}
- catch(e){if(request!==state.request)return;state.error='تعذر تحميل المجموعة. تحقق من إعدادات TMDB.';console.error(e)}
+ try{
+  const data=await fetchCollectionPage(key,1);if(request!==state.request)return;
+  state.items=data.items;state.totalPages=data.totalPages;
+  if(!state.items.length)state.error='لا توجد أعمال متاحة لهذا القسم حاليًا.';
+ }catch(e){if(request!==state.request)return;state.error='تعذر تحميل المجموعة. تحقق من إعدادات TMDB.';console.error(e)}
  state.loading=false;render();document.querySelector('#catalog')?.scrollIntoView({behavior:'smooth'});
+}
+async function loadCollectionMore(){
+ if(state.loading||state.page>=state.totalPages||!currentCollectionKey)return;
+ const request=++state.request;const nextPage=state.page+1;state.loading=true;
+ const button=document.querySelector('#more');if(button){button.disabled=true;button.textContent='جاري تحميل المزيد...'}
+ try{
+  const data=await fetchCollectionPage(currentCollectionKey,nextPage);if(request!==state.request)return;
+  const seen=new Set(state.items.map(x=>typeOf(x)+':'+x.id));
+  state.items.push(...data.items.filter(x=>{const id=typeOf(x)+':'+x.id;if(seen.has(id))return false;seen.add(id);return true}));
+  state.page=nextPage;state.totalPages=data.totalPages;
+ }catch(e){if(request!==state.request)return;state.error='تعذر تحميل المزيد. حاول مرة أخرى.';console.error(e)}
+ state.loading=false;render();
 }
 
 load();
