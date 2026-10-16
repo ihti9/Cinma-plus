@@ -71,10 +71,10 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
    }
   };
  }
- playerRoot.querySelectorAll('[data-watch-episode]').forEach(button=>button.onclick=()=>openCinemaPlayer({type,id,title,season,episode:Number(button.dataset.watchEpisode),poster_path,imdbId,anilistId,episodes,seasons,loadSeasonEpisodes}));
+ playerRoot.querySelectorAll('[data-watch-episode]').forEach(button=>button.onclick=()=>openCinemaPlayer({type,id,title,season,episode:Number(button.dataset.watchEpisode),poster_path,imdbId,isAnime,anilistId,episodes,seasons,loadSeasonEpisodes}));
  if(type==='tv'&&episodes.length){
   const index=episodes.findIndex(ep=>Number(ep.number)===Number(episode));
-  const goTo=offset=>{const next=episodes[index+offset];if(next)openCinemaPlayer({type,id,title,season,episode:Number(next.number),poster_path,imdbId,episodes,seasons,loadSeasonEpisodes})};
+  const goTo=offset=>{const next=episodes[index+offset];if(next)openCinemaPlayer({type,id,title,season,episode:Number(next.number),poster_path,imdbId,isAnime,anilistId,episodes,seasons,loadSeasonEpisodes})};
   const prev=playerRoot.querySelector('#dexter-prev-episode'),next=playerRoot.querySelector('#dexter-next-episode');
   if(prev){prev.disabled=index<=0;prev.onclick=()=>goTo(-1)}
   if(next){next.disabled=index<0||index>=episodes.length-1;next.onclick=()=>goTo(1)}
@@ -93,6 +93,14 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const manual=document.createElement('button');manual.type='button';manual.textContent='فتح المشغل';manual.onclick=()=>{const value=Number(input.value);if(Number.isSafeInteger(value)&&value>0){aniButton.disabled=false;anilistId=value;aniButton.click()}};aniButton.parentElement.appendChild(manual);
  }
 
+ if(aniButton){
+  screen.style.cursor='pointer';
+  screen.setAttribute('role','button');
+  screen.setAttribute('tabindex','0');
+  screen.setAttribute('aria-label','اضغط لتشغيل الحلقة عبر Ani.pm');
+  screen.onclick=event=>{if(event.target.closest('video, iframe, button, input'))return;if(!aniButton.disabled)aniButton.click()};
+  screen.onkeydown=event=>{if((event.key==='Enter'||event.key===' ')&&!screen.querySelector('video, iframe')&&!aniButton.disabled){event.preventDefault();aniButton.click()}};
+ }
  if(aniButton)aniButton.onclick=()=>{
   const aniId=Number(anilistId),ep=type==='tv'?Number(episode):1;
   if(!Number.isSafeInteger(aniId)||aniId<1||!Number.isSafeInteger(ep)||ep<1)return;
@@ -101,6 +109,8 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const iframe=document.createElement('iframe');iframe.src=`https://ani.pm/embed/ani/${aniId}/${ep}/sub`;
   iframe.title='Ani.pm — '+heading;iframe.dir='ltr';iframe.setAttribute('dir','ltr');iframe.style.cssText='width:100%;aspect-ratio:16/9;border:0;direction:ltr';iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media; screen-wake-lock';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';
   screen.appendChild(iframe);
+  screen.style.cursor='auto';
+  screen.removeAttribute('role');screen.removeAttribute('tabindex');screen.removeAttribute('aria-label');
  };
  const libraryInput=playerRoot.querySelector('#cinema-library-url');
  const libraryStatus=playerRoot.querySelector('#cinema-library-status');
@@ -140,13 +150,13 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
     const btn=document.createElement('button');btn.type='button';btn.dataset.server=source.id;btn.textContent=source.name;btn.onclick=()=>selectSource(source);list.appendChild(btn);
    });
    addonStatus.textContent=items.length?'مصادر مباشرة متاحة: '+items.length:'لم توفر الإضافة رابط MP4/HLS مباشرًا؛ روابط التورنت تحتاج خادم بث.';
-   if(items.length&&!sources.length&&!screen.querySelector('video'))selectSource(items[0]);
-   if(!items.length&&!sources.length&&!screen.querySelector('video'))screen.innerHTML='<div class="cinema-player-empty"><span>▶</span><h3>لا يوجد رابط تشغيل مباشر</h3><p>لم توفر إضافة Stremio فيديو MP4/HLS متوافقًا. روابط التورنت تحتاج خادم بث.</p></div>';
+   if(items.length&&!sources.length&&!screen.querySelector('video, iframe'))selectSource(items[0]);
+   if(!items.length&&!sources.length&&!screen.querySelector('video, iframe')&&!aniButton)screen.innerHTML='<div class="cinema-player-empty"><span>▶</span><h3>لا يوجد رابط تشغيل مباشر</h3><p>لم توفر إضافة Stremio فيديو MP4/HLS متوافقًا. روابط التورنت تحتاج خادم بث.</p></div>';
   }catch{addonStatus.textContent='تعذر الاتصال بالإضافة؛ قد تكون CORS غير مفعّلة.'}
  }
  loadAddon();
  if(!sources.length){
-  screen.innerHTML=`<div class="cinema-player-empty"><span>▶</span><h3>جاري البحث عن رابط تشغيل</h3><p>سيبدأ الفيديو تلقائيًا عند توفر مصدر مباشر متوافق.</p></div>`;
+  screen.innerHTML=aniButton?'<div class="cinema-player-empty"><span>▶</span><h3>اضغط على الشاشة لتشغيل الحلقة</h3><p>سيُفتح مشغل Ani.pm هنا مباشرة.</p></div>':'<div class="cinema-player-empty"><span>▶</span><h3>جاري البحث عن رابط تشغيل</h3><p>سيبدأ الفيديو تلقائيًا عند توفر مصدر مباشر متوافق.</p></div>';
   list.innerHTML='<span class="cinema-server-unavailable">لا توجد سيرفرات متاحة حاليًا</span>';
   return;
  }
