@@ -106,6 +106,13 @@ async function animeMetadata(item){
  const key=item.id;
  if(animeCache.has(key))return animeCache.get(key);
  const result={};
+ // Bleach (2004) is AniList 269; do not confuse it with Thousand-Year Blood War.
+ const animeNames=[item.original_name,item.name,item.english_name,item.english_title].map(normalizedAnimeTitle);
+ if(animeNames.includes('bleach')&&!animeNames.some(n=>n.includes('thousandyearbloodwar')||n.includes('sennenkessenhen'))){
+  result.anilistId=269;
+  animeCache.set(key,result);
+  return result;
+ }
  try{
   const query='query($search:String){Media(search:$search,type:ANIME){id idMal description(asHtml:false) title{romaji english native synonyms}}}';
   const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,variables:{search:item.original_name||item.name}})});
