@@ -21,3 +21,11 @@
 
 /* CINEMA+ v10: automatic progressive pagination */
 .auto-more{margin:24px auto 12px;text-align:center;color:#aeb4c3;font-size:14px;min-height:40px;padding:12px;}
+
+/* v13: search next to logo, responsive */
+.header-brand-search{display:flex;align-items:center;gap:20px;min-width:0;flex:1}
+.header-search{width:min(320px,38vw);flex-shrink:1}
+.header-search input{min-width:0}
+header nav{flex-shrink:0;margin-inline-start:20px}
+@media(max-width:900px){.header-brand-search{gap:12px}.header-search{width:min(290px,40vw)}header nav{gap:12px;margin-inline-start:10px}}
+@media(max-width:650px){.header-brand-search{flex:1;gap:9px}.brand{font-size:21px;white-space:nowrap}.header-search{width:auto;flex:1;min-width:0;padding:0 8px}.header-search input{font-size:12px;padding:10px 3px}.header-search span{font-size:20px}#menu{margin-inline-start:8px;flex-shrink:0}}
