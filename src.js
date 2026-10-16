@@ -132,7 +132,7 @@ async function show(id,type){
  if(!modal)return;
  modal.innerHTML='<div class="overlay" id="overlay"><div class="dialog trailer-loading" role="status">جاري تحميل التفاصيل والإعلان الرسمي...</div></div>';
  const [details,trailer]=await Promise.all([
-  api(`/${type}/${encodeURIComponent(id)}`).catch(()=>null),
+  api(`/${type}/${encodeURIComponent(id)}?append_to_response=credits,similar`).catch(()=>null),
   getTrailer(type,id)
  ]);
  if(request!==modalRequest||!document.querySelector('#overlay'))return;
@@ -140,7 +140,13 @@ async function show(id,type){
  const extra=await enrichDetails(type,id,x).catch(()=>({}));
  if(request!==modalRequest)return;
  const key=`${type}:${id}`,saved=state.watchlist.some(v=>`${v.media_type}:${v.id}`===key);
- modal.innerHTML=`<div class="overlay" id="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-label="تفاصيل ${escapeHTML(title(x))}"><button class="close" id="close" aria-label="إغلاق">×</button><div class="dialog-img">${x.backdrop_path?`<img src="${img(x.backdrop_path,'w1280')}" alt=""/>`:''}</div><div class="dialog-body"><small>★ ${(x.vote_average||0).toFixed(1)} · ${year(x)} · ${type==='tv'?'مسلسل':'فيلم'}</small><h2>${escapeHTML(title(x))}</h2><p>${escapeHTML(x.overview||'لا يوجد وصف متاح.')}</p>${extra.html||''}<div class="trailer-section"><h3>الإعلان الرسمي</h3>${trailer?`<div class="trailer-placeholder" id="trailer-placeholder"><button class="primary" id="play-trailer" type="button">▶ شاهد الإعلان الرسمي</button><span>من YouTube عبر TMDB</span></div>`:'<p class="trailer-empty">لا يتوفر إعلان رسمي لهذا العنوان حاليًا.</p>'}</div>${type==='tv'&&x.seasons?.length?`<div class="seasons"><h3>المواسم والحلقات</h3>${x.seasons.map(v=>`<div class="season"><strong>${escapeHTML(v.name)}</strong><span>${v.episode_count||0} حلقة · ${escapeHTML(v.air_date||'موعد غير محدد')}</span></div>`).join('')}</div>`:''}<div class="actions"><button class="primary" id="save">${saved?'✓ تمت الإضافة إلى قائمتي':'+ أضف إلى قائمتي'}</button><a class="secondary" target="_blank" rel="noopener noreferrer" href="https://www.themoviedb.org/${type}/${encodeURIComponent(id)}">تفاصيل TMDB ↗</a></div><p class="disclaimer">يعرض الموقع إعلانات YouTube الرسمية فقط، ولا يوفر الأفلام أو الحلقات كاملة.</p></div></div></div>`;
+ const cast=(details?.credits?.cast||[]).slice(0,12);
+ const similar=(details?.similar?.results||[]).filter(v=>v.poster_path).slice(0,12);
+ const genresText=(x.genres||[]).map(g=>escapeHTML(g.name)).join(' · ');
+ const runtime=type==='movie'&&x.runtime?`${x.runtime} دقيقة`:type==='tv'&&x.number_of_seasons?`${x.number_of_seasons} موسم`:'';
+ const director=type==='movie'?(details?.credits?.crew||[]).find(v=>v.job==='Director'):null;
+ modal.innerHTML=`<div class="overlay" id="overlay"><div class="dialog cinematic-dialog" role="dialog" aria-modal="true" aria-label="تفاصيل ${escapeHTML(title(x))}"><button class="close" id="close" aria-label="إغلاق">×</button><div class="cinematic-backdrop" ${x.backdrop_path?`style="background-image:linear-gradient(0deg,#121520 1%,transparent 90%),linear-gradient(90deg,#121520cc,transparent),url('${img(x.backdrop_path,'w1280')}')"`:''}></div><div class="cinematic-intro"><div class="cinematic-poster">${x.poster_path?`<img src="${img(x.poster_path,'w342')}" alt="ملصق ${escapeHTML(title(x))}" loading="lazy">`:''}</div><div class="cinematic-summary"><span class="cinematic-eyebrow">CINEMA+ · ${type==='tv'?'مسلسل':'فيلم'}</span><h2>${escapeHTML(title(x))}</h2>${x.tagline?`<p class="cinematic-tagline">${escapeHTML(x.tagline)}</p>`:''}<div class="cinematic-meta"><span>★ ${(x.vote_average||0).toFixed(1)}</span><span>${year(x)||'—'}</span>${runtime?`<span>${runtime}</span>`:''}</div>${genresText?`<div class="cinematic-genres">${genresText}</div>`:''}<p class="cinematic-overview">${escapeHTML(x.overview||'لا يوجد وصف متاح لهذا العمل.')}</p>${director?`<p class="cinematic-credit">إخراج: ${escapeHTML(director.name)}</p>`:''}<div class="actions"><button class="primary" id="save">${saved?'✓ تمت الإضافة إلى قائمتي':'+ أضف إلى قائمتي'}</button><a class="secondary" target="_blank" rel="noopener noreferrer" href="https://www.themoviedb.org/${type}/${encodeURIComponent(id)}">تفاصيل TMDB ↗</a></div></div></div><div class="cinematic-sections">${extra.html||''}${cast.length?`<section class="cinematic-section"><h3>طاقم التمثيل</h3><div class="cinematic-rail">${cast.map(v=>`<div class="cinematic-person">${v.profile_path?`<img src="${img(v.profile_path,'w185')}" loading="lazy" alt="${escapeHTML(v.name)}">`:'<div class="cinematic-noimage">★</div>'}<strong>${escapeHTML(v.name)}</strong><small>${escapeHTML(v.character||'')}</small></div>`).join('')}</div></section>`:''}<section class="cinematic-section trailer-section"><h3>الإعلان الرسمي</h3>${trailer?`<div class="trailer-placeholder" id="trailer-placeholder"><button class="primary" id="play-trailer" type="button">▶ شاهد الإعلان الرسمي</button><span>من YouTube عبر TMDB</span></div>`:'<p class="trailer-empty">لا يتوفر إعلان رسمي لهذا العنوان حاليًا.</p>'}</section>${type==='tv'&&x.seasons?.length?`<section class="cinematic-section seasons"><h3>المواسم والحلقات</h3>${x.seasons.filter(v=>v.season_number>0).map(v=>`<button type="button" class="season cinematic-season" data-season="${v.season_number}"><span><strong>${escapeHTML(v.name)}</strong><small>${escapeHTML(v.air_date||'')}</small></span><span>${v.episode_count||0} حلقة ←</span></button>`).join('')}<div id="episode-results" aria-live="polite"></div></section>`:''}${similar.length?`<section class="cinematic-section"><h3>أعمال مشابهة</h3><div class="cinematic-rail">${similar.map(v=>`<button type="button" class="cinematic-related" data-related="${v.id}" data-type="${type}"><img src="${img(v.poster_path,'w342')}" alt="${escapeHTML(title(v))}" loading="lazy"><span>${escapeHTML(title(v))}</span></button>`).join('')}</div></section>`:''}<p class="disclaimer">الموقع يعرض معلومات الأعمال وإعلاناتها الرسمية فقط، ولا يوفر حلقات أو أفلامًا كاملة.</p></div></div></div>`;
+
  const close=()=>{modalRequest++;modal.innerHTML='';document.removeEventListener('keydown',escapeClose)};
  const escapeClose=e=>{if(e.key==='Escape')close()};
  document.addEventListener('keydown',escapeClose,{once:false});
@@ -155,6 +161,19 @@ async function show(id,type){
   iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';
   holder.replaceWith(iframe);iframe.className='trailer-player';
  }};
+ document.querySelectorAll('[data-season]').forEach(button=>button.onclick=async()=>{
+  const target=document.querySelector('#episode-results');if(!target)return;
+  const season=button.dataset.season;
+  target.innerHTML='<p class="trailer-empty">جاري تحميل الحلقات...</p>';
+  try{const data=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(season)}`);
+   if(request!==modalRequest||!target.isConnected)return;
+   target.innerHTML=(data?.episodes||[]).length?`<div class="episode-grid">${data.episodes.map(ep=>`<div class="episode-card">${ep.still_path?`<img src="${img(ep.still_path,'w300')}" loading="lazy" alt="">`:''}<div><strong>${ep.episode_number}. ${escapeHTML(ep.name||'حلقة')}</strong><small>${ep.runtime?`${ep.runtime} دقيقة · `:''}${escapeHTML(ep.air_date||'')}</small><p>${escapeHTML(ep.overview||'لا يوجد وصف للحلقة.')}</p></div></div>`).join('')}</div>`:'<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';
+  }catch{if(target.isConnected)target.innerHTML='<p class="trailer-empty">تعذر تحميل الحلقات، حاول مرة أخرى.</p>'}
+ });
+ document.querySelectorAll('[data-related]').forEach(button=>button.onclick=()=>{
+  const related=similar.find(v=>String(v.id)===button.dataset.related);
+  if(related){state.items=[...state.items,{...related,media_type:type}];show(related.id,type)}
+ });
  document.querySelector('#save').onclick=()=>{
   state.watchlist=saved?state.watchlist.filter(v=>`${v.media_type}:${v.id}`!==key):[...state.watchlist,saveEntry(x)];
   localStorage.setItem('cinema_watchlist_v2',JSON.stringify(state.watchlist));close();render();show(id,type);
