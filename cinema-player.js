@@ -22,6 +22,9 @@ async function getStremioSources(imdbId,type,season,episode){
   }catch{return []}
  });
 }
+const LIBRARY_KEY='cinema_video_library_v1';
+const readLibrary=()=>{try{const value=JSON.parse(localStorage.getItem(LIBRARY_KEY)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch{return {}}};
+const librarySource=key=>{const item=readLibrary()[key];return safeSource(item)?[item]:[]};
 const PLAYER_POSITION_KEY='cinema_playback_positions_v1';
 const EPISODE_PROGRESS_KEY='cinema_episode_progress_v1';
 const safeRead=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{return {}}};
@@ -36,14 +39,14 @@ let playerRoot=null;
 export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbId='',episodes=[],seasons=[],loadSeasonEpisodes}){
  closeCinemaPlayer();
  const key=mediaKey({type,id,season,episode});
- const sources=(playbackSources[key]||[]).filter(safeSource);
+ const sources=[...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
  const positions=safeRead(PLAYER_POSITION_KEY);
  const heading=type==='tv'?`${title} · الموسم ${season} الحلقة ${episode}`:title;
  playerRoot=document.createElement('div');
  playerRoot.className='cinema-player-overlay';
  playerRoot.setAttribute('role','dialog');playerRoot.setAttribute('aria-modal','true');
  playerRoot.setAttribute('aria-label','مشغّل '+heading);
- playerRoot.innerHTML=`<div class="cinema-player-shell dexter-watch"><div class="cinema-player-top"><div class="dexter-watch-brand"><span>CINEMA<span class="dexter-watch-plus">+</span></span><small>صفحة المشاهدة</small></div><button type="button" class="cinema-player-close" aria-label="العودة للتفاصيل">✕ <span>رجوع</span></button></div><div class="dexter-watch-content"><div class="dexter-watch-main"><div class="dexter-watch-title"><small>${type==='tv'?'مسلسل · الموسم '+season+' · الحلقة '+episode:'فيلم'}</small><h2>${htmlEscape(heading)}</h2></div><div class="cinema-player-screen" id="cinema-player-screen"></div><div class="dexter-watch-toolbar"><span>▶ مشغّل CINEMA+</span><span>اختر سيرفرًا للمشاهدة</span></div><section class="cinema-player-controls"><div class="cinema-watch-meta"><span>سيرفرات المشاهدة</span><span>${sources.length} سيرفر متاح</span></div><div class="cinema-server-list" id="cinema-server-list"></div><div style="margin:12px 0;padding:12px;border:1px solid #555;border-radius:10px"><button type="button" id="cinema-demo-play" style="padding:10px 14px;cursor:pointer">▶ تشغيل فيديو تجريبي مجاني</button><p style="font-size:12px;margin:8px 0 0">مقطع فيديو تجريبي مفتوح الاستخدام (CC0) من MDN لاختبار المشغل فقط، وليس الفيلم أو الحلقة المختارة.</p></div><div style="margin-top:12px"><label for="cinema-addon-url">رابط إضافة Stremio</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="cinema-addon-url" type="url" placeholder="https://addon.example/manifest.json" dir="ltr" style="flex:1;min-width:190px"><button type="button" id="cinema-addon-save">حفظ الإضافة</button></div><small id="cinema-addon-status">تُعرض مصادر MP4 وHLS المباشرة فقط.</small></div><p class="cinema-player-note">تُربط مصادر الفيديو المرخّصة لاحقًا. السيرفرات غير المضافة لن تعمل.</p></section><div class="dexter-watch-navigation">${type==='tv'&&episodes.length?'<button type="button" id="dexter-prev-episode">← الحلقة السابقة</button><button type="button" id="dexter-next-episode">الحلقة التالية ←</button>':''}</div></div>${type==='tv'?'<aside class="cinema-watch-episodes dexter-watch-sidebar"><div class="dexter-sidebar-head"><h3>قائمة الحلقات</h3><label class="dexter-season-label">الجزء <select id="dexter-season-select" aria-label="اختر الموسم">'+(seasons.length?seasons:[{number:season,name:'الموسم '+season}]).map(v=>'<option value="'+Number(v.number)+'" '+(Number(v.number)===Number(season)?'selected':'')+'>'+htmlEscape(v.name||'الموسم '+v.number)+'</option>').join('')+'</select></label></div><div class="cinema-watch-episode-list">'+episodes.map(ep=>'<button type="button" data-watch-episode="'+Number(ep.number)+'" class="'+(Number(ep.number)===Number(episode)?'active':'')+'">'+(ep.still_path?'<img src="https://image.tmdb.org/t/p/w300'+encodeURI(ep.still_path)+'" loading="lazy" alt="">':'<span class="dexter-episode-placeholder">▶</span>')+'<span><strong>الحلقة '+Number(ep.number)+'</strong><small>'+htmlEscape(ep.name||'')+'</small></span></button>').join('')+'</div></aside>':''}</div></div>`;
+ playerRoot.innerHTML=`<div class="cinema-player-shell dexter-watch"><div class="cinema-player-top"><div class="dexter-watch-brand"><span>CINEMA<span class="dexter-watch-plus">+</span></span><small>صفحة المشاهدة</small></div><button type="button" class="cinema-player-close" aria-label="العودة للتفاصيل">✕ <span>رجوع</span></button></div><div class="dexter-watch-content"><div class="dexter-watch-main"><div class="dexter-watch-title"><small>${type==='tv'?'مسلسل · الموسم '+season+' · الحلقة '+episode:'فيلم'}</small><h2>${htmlEscape(heading)}</h2></div><div class="cinema-player-screen" id="cinema-player-screen"></div><div class="dexter-watch-toolbar"><span>▶ مشغّل CINEMA+</span><span>اختر سيرفرًا للمشاهدة</span></div><section class="cinema-player-controls"><div class="cinema-watch-meta"><span>سيرفرات المشاهدة</span><span>${sources.length} سيرفر متاح</span></div><div class="cinema-server-list" id="cinema-server-list"></div><div style="margin:12px 0;padding:12px;border:1px solid #555;border-radius:10px"><button type="button" id="cinema-demo-play" style="padding:10px 14px;cursor:pointer">▶ تشغيل فيديو تجريبي مجاني</button><p style="font-size:12px;margin:8px 0 0">مقطع فيديو تجريبي مفتوح الاستخدام (CC0) من MDN لاختبار المشغل فقط، وليس الفيلم أو الحلقة المختارة.</p></div><details style="margin:12px 0;padding:12px;border:1px solid #555;border-radius:10px"><summary style="cursor:pointer">إدارة رابط الفيديو لهذا العنوان (على جهازك فقط)</summary><p style="font-size:12px">أضف رابط فيديو HTTPS تملك حق بثه. يتم الحفظ في هذا المتصفح فقط، ولا يظهر لبقية الزوار.</p><label for="cinema-library-url">رابط MP4 أو HLS</label><input id="cinema-library-url" type="url" dir="ltr" placeholder="https://example.com/video.mp4" style="width:100%;box-sizing:border-box;padding:10px;margin:6px 0"><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="cinema-library-save">حفظ وتشغيل</button><button type="button" id="cinema-library-remove">حذف الرابط</button></div><p id="cinema-library-status" role="status" style="font-size:12px"></p></details><div style="margin-top:12px"><label for="cinema-addon-url">رابط إضافة Stremio</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="cinema-addon-url" type="url" placeholder="https://addon.example/manifest.json" dir="ltr" style="flex:1;min-width:190px"><button type="button" id="cinema-addon-save">حفظ الإضافة</button></div><small id="cinema-addon-status">تُعرض مصادر MP4 وHLS المباشرة فقط.</small></div><p class="cinema-player-note">تُربط مصادر الفيديو المرخّصة لاحقًا. السيرفرات غير المضافة لن تعمل.</p></section><div class="dexter-watch-navigation">${type==='tv'&&episodes.length?'<button type="button" id="dexter-prev-episode">← الحلقة السابقة</button><button type="button" id="dexter-next-episode">الحلقة التالية ←</button>':''}</div></div>${type==='tv'?'<aside class="cinema-watch-episodes dexter-watch-sidebar"><div class="dexter-sidebar-head"><h3>قائمة الحلقات</h3><label class="dexter-season-label">الجزء <select id="dexter-season-select" aria-label="اختر الموسم">'+(seasons.length?seasons:[{number:season,name:'الموسم '+season}]).map(v=>'<option value="'+Number(v.number)+'" '+(Number(v.number)===Number(season)?'selected':'')+'>'+htmlEscape(v.name||'الموسم '+v.number)+'</option>').join('')+'</select></label></div><div class="cinema-watch-episode-list">'+episodes.map(ep=>'<button type="button" data-watch-episode="'+Number(ep.number)+'" class="'+(Number(ep.number)===Number(episode)?'active':'')+'">'+(ep.still_path?'<img src="https://image.tmdb.org/t/p/w300'+encodeURI(ep.still_path)+'" loading="lazy" alt="">':'<span class="dexter-episode-placeholder">▶</span>')+'<span><strong>الحلقة '+Number(ep.number)+'</strong><small>'+htmlEscape(ep.name||'')+'</small></span></button>').join('')+'</div></aside>':''}</div></div>`;
  document.body.appendChild(playerRoot);
  document.body.classList.add('cinema-player-open');
  const screen=playerRoot.querySelector('#cinema-player-screen');
@@ -81,6 +84,23 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  playerRoot._onKey=onKey;document.addEventListener('keydown',onKey);
  closeButton.focus();
 
+ const libraryInput=playerRoot.querySelector('#cinema-library-url');
+ const libraryStatus=playerRoot.querySelector('#cinema-library-status');
+ libraryInput.value=readLibrary()[key]?.url||'';
+ playerRoot.querySelector('#cinema-library-save').onclick=()=>{
+  try{
+   const u=new URL(libraryInput.value.trim());
+   if(u.protocol!=='https:'||u.username||u.password||!/[.](mp4|m3u8)$/i.test(u.pathname))throw Error('invalid');
+   const kind=u.pathname.toLowerCase().endsWith('.m3u8')?'hls':'mp4';
+   const item={id:'library-'+key,name:'فيديو مكتبتي',kind,url:u.href};
+   const library=readLibrary();library[key]=item;localStorage.setItem(LIBRARY_KEY,JSON.stringify(library));
+   libraryStatus.textContent='تم الحفظ على هذا الجهاز، وجاري التشغيل.';
+   const old=list.querySelector('[data-server^="library-"]');if(old)old.remove();
+   const btn=document.createElement('button');btn.type='button';btn.dataset.server=item.id;btn.textContent=item.name;btn.onclick=()=>selectSource(item);list.prepend(btn);
+   selectSource(item);
+  }catch{libraryStatus.textContent='استخدم رابط HTTPS مباشر ينتهي بـ .mp4 أو .m3u8.'}
+ };
+ playerRoot.querySelector('#cinema-library-remove').onclick=()=>{const library=readLibrary();delete library[key];localStorage.setItem(LIBRARY_KEY,JSON.stringify(library));libraryInput.value='';list.querySelector('[data-server^="library-"]')?.remove();libraryStatus.textContent='تم حذف الرابط من هذا الجهاز.'};
  const rootForAddon=playerRoot;
  playerRoot.querySelector('#cinema-demo-play').onclick=()=>selectSource(DEMO_VIDEO);
  const addonInput=playerRoot.querySelector('#cinema-addon-url');
@@ -126,6 +146,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=poster_path?`https://image.tmdb.org/t/p/w780${poster_path}`:'';
   // Torrent entries point to an authorized HTTPS streaming gateway, not a magnet URI.
   video.src=source.url;video.className='cinema-native-video';
+  if(source.id.startsWith('library-'))video.autoplay=true;
   if(source.id==='demo-bbb')video.poster='';
   let lastSaved=0;
   const saved=positions[key]?.[source.id];
