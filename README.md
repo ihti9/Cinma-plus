@@ -17,3 +17,9 @@ Arabic movie and TV catalog using TMDB (no video streaming).
 - If TMDB credentials are not configured, the app uses demonstration entries.
 - This product uses the TMDB API but is not endorsed or certified by TMDB.
 - No copyrighted streams or media hosting are included.
+
+## v3 additions
+- Genre and year filters, sorting by popularity, ratings, or date
+- Season names and episode counts in TV detail pages
+- No playback, only TMDB metadata
+- After editing files on GitHub's `main` branch, Vercel deploys automatically if Git integration remains connected.
