@@ -49,5 +49,57 @@ async function load(view='trending',q='',append=false){
  }
  state.loading=false;render();
 }
-async function show(id,type){let x=[...state.items,...state.watchlist].find(a=>String(a.id)===String(id)&&typeOf(a)===type);if(!x)return;try{const details=await api(`/${type}/${id}`);if(details)x={...x,...details}}catch{}const key=`${type}:${id}`,saved=state.watchlist.some(v=>`${v.media_type}:${v.id}`===key);document.querySelector('#modal-root').innerHTML=`<div class="overlay" id="overlay"><div class="dialog"><button class="close" id="close" aria-label="إغلاق">×</button><div class="dialog-img">${x.backdrop_path?`<img src="${img(x.backdrop_path,'w1280')}" alt=""/>`:''}</div><div class="dialog-body"><small>★ ${(x.vote_average||0).toFixed(1)} · ${year(x)} · ${type==='tv'?'مسلسل':'فيلم'}</small><h2>${escapeHTML(title(x))}</h2><p>${escapeHTML(x.overview||'لا يوجد وصف متاح.')}</p>${type==='tv'&&x.seasons?.length?`<div class="seasons"><h3>المواسم والحلقات</h3>${x.seasons.map(v=>`<div class="season"><strong>${escapeHTML(v.name)}</strong><span>${v.episode_count||0} حلقة · ${escapeHTML(v.air_date||'موعد غير محدد')}</span></div>`).join('')}</div>`:''}<div class="actions"><button class="primary" id="save">${saved?'✓ تمت الإضافة إلى قائمتي':'+ أضف إلى قائمتي'}</button><a class="secondary" target="_blank" rel="noopener" href="https://www.themoviedb.org/${type}/${id}">تفاصيل TMDB ↗</a></div><p class="disclaimer">الموقع لعرض المعلومات والاكتشاف، ولا يوفر بثًا غير مرخّص.</p></div></div></div>`;document.querySelector('#close').onclick=()=>document.querySelector('#modal-root').innerHTML='';document.querySelector('#overlay').onclick=e=>{if(e.target.id==='overlay')document.querySelector('#modal-root').innerHTML=''};document.querySelector('#save').onclick=()=>{state.watchlist=saved?state.watchlist.filter(v=>`${v.media_type}:${v.id}`!==key):[...state.watchlist,saveEntry(x)];localStorage.setItem('cinema_watchlist_v2',JSON.stringify(state.watchlist));document.querySelector('#modal-root').innerHTML='';render();show(id,type)}}
+// TMDB video metadata is public; only trusted YouTube keys are embedded.
+const validYoutubeKey=key=>typeof key==='string'&&/^[A-Za-z0-9_-]{11}$/.test(key);
+function selectTrailer(videos){
+ const eligible=(videos||[]).filter(v=>v.site==='YouTube'&&validYoutubeKey(v.key)&&v.official!==false&&['Trailer','Teaser'].includes(v.type));
+ eligible.sort((a,b)=>Number(b.type==='Trailer')-Number(a.type==='Trailer')||Number(b.official===true)-Number(a.official===true));
+ return eligible[0]||null;
+}
+async function getTrailer(type,id){
+ if(!KEY&&!TOKEN)return null;
+ for(const lang of ['ar-SA','en-US']){
+  try{
+   const response=await api(`/${type}/${encodeURIComponent(id)}/videos?language=${lang}`);
+   const trailer=selectTrailer(response?.results);
+   if(trailer)return trailer;
+  }catch(e){console.warn('تعذّر جلب إعلانات TMDB',e)}
+ }
+ return null;
+}
+let modalRequest=0;
+async function show(id,type){
+ const request=++modalRequest;
+ let x=[...state.items,...state.watchlist].find(a=>String(a.id)===String(id)&&typeOf(a)===type);
+ if(!x)return;
+ const modal=document.querySelector('#modal-root');
+ if(!modal)return;
+ modal.innerHTML='<div class="overlay" id="overlay"><div class="dialog trailer-loading" role="status">جاري تحميل التفاصيل والإعلان الرسمي...</div></div>';
+ const [details,trailer]=await Promise.all([
+  api(`/${type}/${encodeURIComponent(id)}`).catch(()=>null),
+  getTrailer(type,id)
+ ]);
+ if(request!==modalRequest||!document.querySelector('#overlay'))return;
+ if(details)x={...x,...details};
+ const key=`${type}:${id}`,saved=state.watchlist.some(v=>`${v.media_type}:${v.id}`===key);
+ modal.innerHTML=`<div class="overlay" id="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-label="تفاصيل ${escapeHTML(title(x))}"><button class="close" id="close" aria-label="إغلاق">×</button><div class="dialog-img">${x.backdrop_path?`<img src="${img(x.backdrop_path,'w1280')}" alt=""/>`:''}</div><div class="dialog-body"><small>★ ${(x.vote_average||0).toFixed(1)} · ${year(x)} · ${type==='tv'?'مسلسل':'فيلم'}</small><h2>${escapeHTML(title(x))}</h2><p>${escapeHTML(x.overview||'لا يوجد وصف متاح.')}</p><div class="trailer-section"><h3>الإعلان الرسمي</h3>${trailer?`<div class="trailer-placeholder" id="trailer-placeholder"><button class="primary" id="play-trailer" type="button">▶ شاهد الإعلان الرسمي</button><span>من YouTube عبر TMDB</span></div>`:'<p class="trailer-empty">لا يتوفر إعلان رسمي لهذا العنوان حاليًا.</p>'}</div>${type==='tv'&&x.seasons?.length?`<div class="seasons"><h3>المواسم والحلقات</h3>${x.seasons.map(v=>`<div class="season"><strong>${escapeHTML(v.name)}</strong><span>${v.episode_count||0} حلقة · ${escapeHTML(v.air_date||'موعد غير محدد')}</span></div>`).join('')}</div>`:''}<div class="actions"><button class="primary" id="save">${saved?'✓ تمت الإضافة إلى قائمتي':'+ أضف إلى قائمتي'}</button><a class="secondary" target="_blank" rel="noopener noreferrer" href="https://www.themoviedb.org/${type}/${encodeURIComponent(id)}">تفاصيل TMDB ↗</a></div><p class="disclaimer">يعرض الموقع إعلانات YouTube الرسمية فقط، ولا يوفر الأفلام أو الحلقات كاملة.</p></div></div></div>`;
+ const close=()=>{modalRequest++;modal.innerHTML='';document.removeEventListener('keydown',escapeClose)};
+ const escapeClose=e=>{if(e.key==='Escape')close()};
+ document.addEventListener('keydown',escapeClose,{once:false});
+ document.querySelector('#close').onclick=close;
+ document.querySelector('#overlay').onclick=e=>{if(e.target.id==='overlay')close()};
+ if(trailer){document.querySelector('#play-trailer').onclick=()=>{
+  const holder=document.querySelector('#trailer-placeholder');if(!holder)return;
+  const iframe=document.createElement('iframe');
+  iframe.src=`https://www.youtube-nocookie.com/embed/${trailer.key}?autoplay=1&rel=0`;
+  iframe.title='الإعلان الرسمي: '+title(x);
+  iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';
+  holder.replaceWith(iframe);iframe.className='trailer-player';
+ }};
+ document.querySelector('#save').onclick=()=>{
+  state.watchlist=saved?state.watchlist.filter(v=>`${v.media_type}:${v.id}`!==key):[...state.watchlist,saveEntry(x)];
+  localStorage.setItem('cinema_watchlist_v2',JSON.stringify(state.watchlist));close();render();show(id,type);
+ };
+}
 load();
