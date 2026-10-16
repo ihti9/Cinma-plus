@@ -147,3 +147,11 @@ header nav{flex-shrink:0;margin-inline-start:20px}
 .dexter-watch .cinema-watch-episode-list button small{font-size:11px;line-height:1.4}
 @media(max-width:850px){.dexter-watch-content{grid-template-columns:1fr}.dexter-watch-sidebar{position:static;max-height:none;min-height:0;border-right:0;border-top:1px solid #293243}.dexter-watch .cinema-watch-episode-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.dexter-watch .cinema-watch-episode-list button img,.dexter-episode-placeholder{width:75px}}
 @media(max-width:520px){.dexter-watch .cinema-player-top{padding:10px 12px}.dexter-watch-brand>span{font-size:18px}.dexter-watch-brand small{display:none}.dexter-watch-main{padding:14px 10px}.dexter-watch .cinema-watch-episode-list{grid-template-columns:1fr}.dexter-watch .cinema-watch-episode-list button img,.dexter-episode-placeholder{width:96px}.dexter-watch .cinema-player-screen{border-radius:6px}.dexter-watch-toolbar{font-size:11px}}
+
+/* v24: season switcher inside the watch sidebar */
+.dexter-season-label{display:flex;align-items:center;gap:7px;color:#aeb8c8;font-size:12px;white-space:nowrap}
+.dexter-season-label select{background:#242d3f;color:white;border:1px solid #55627a;border-radius:8px;padding:9px 10px;font:inherit;max-width:170px;min-width:110px}
+.dexter-season-label select:focus-visible{outline:2px solid #e8b45d;outline-offset:2px}
+.dexter-season-label select:disabled{opacity:.55}
+.dexter-season-loading{color:#aab5c7;padding:20px 10px;text-align:center;font-size:13px}
+@media(max-width:520px){.dexter-sidebar-head{flex-wrap:wrap}.dexter-season-label select{max-width:190px}}
