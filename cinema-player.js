@@ -10,7 +10,7 @@ const safeSource=(source)=>{
 const mediaKey=({type,id,season,episode})=>type==='tv'?`tv:${id}:s${season}:e${episode}`:`movie:${id}`;
 const htmlEscape=(value)=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 let playerRoot=null;
-export function openCinemaPlayer({type,id,title,season,episode,poster_path}){
+export function openCinemaPlayer({type,id,title,season,episode,poster_path,episodes=[]}){
  closeCinemaPlayer();
  const key=mediaKey({type,id,season,episode});
  const sources=(playbackSources[key]||[]).filter(safeSource);
@@ -20,13 +20,14 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path}){
  playerRoot.className='cinema-player-overlay';
  playerRoot.setAttribute('role','dialog');playerRoot.setAttribute('aria-modal','true');
  playerRoot.setAttribute('aria-label','مشغّل '+heading);
- playerRoot.innerHTML=`<div class="cinema-player-shell"><div class="cinema-player-top"><div><small>CINEMA+ PLAYER</small><h2>${htmlEscape(heading)}</h2></div><button type="button" class="cinema-player-close" aria-label="إغلاق المشغّل">×</button></div><div class="cinema-player-screen" id="cinema-player-screen"></div><div class="cinema-player-controls"><h3>سيرفرات المشاهدة</h3><div class="cinema-server-list" id="cinema-server-list"></div><p class="cinema-player-note">تُضاف مصادر العرض المرخّصة لاحقًا. لا يوفر CINEMA+ حاليًا روابط لمشاهدة الأفلام أو الحلقات.</p></div></div>`;
+ playerRoot.innerHTML=`<div class="cinema-player-shell"><div class="cinema-player-top"><div><small>CINEMA+ PLAYER</small><h2>${htmlEscape(heading)}</h2></div><button type="button" class="cinema-player-close" aria-label="إغلاق المشغّل">×</button></div><div class="cinema-player-screen" id="cinema-player-screen"></div><div class="cinema-player-controls"><div class="cinema-watch-meta"><span>🎬 CINEMA+ WATCH</span><span>مشاهدة بجودة المصدر المتاح</span></div><h3>سيرفرات المشاهدة</h3><div class="cinema-server-list" id="cinema-server-list"></div><p class="cinema-player-note">تُضاف مصادر العرض المرخّصة لاحقًا. لا يوفر CINEMA+ حاليًا روابط لمشاهدة الأفلام أو الحلقات.</p></div>${type==='tv'&&episodes.length?'<section class="cinema-watch-episodes"><h3>حلقات الموسم '+season+'</h3><div class="cinema-watch-episode-list">'+episodes.map(ep=>'<button type="button" data-watch-episode="'+Number(ep.number)+'" class="'+(Number(ep.number)===Number(episode)?'active':'')+'"><strong>الحلقة '+Number(ep.number)+'</strong><small>'+htmlEscape(ep.name||'')+'</small></button>').join('')+'</div></section>':''}</div>`;
  document.body.appendChild(playerRoot);
  document.body.classList.add('cinema-player-open');
  const screen=playerRoot.querySelector('#cinema-player-screen');
  const list=playerRoot.querySelector('#cinema-server-list');
  const closeButton=playerRoot.querySelector('.cinema-player-close');
  closeButton.onclick=closeCinemaPlayer;
+ playerRoot.querySelectorAll('[data-watch-episode]').forEach(button=>button.onclick=()=>openCinemaPlayer({type,id,title,season,episode:Number(button.dataset.watchEpisode),poster_path,episodes}));
  playerRoot.onclick=e=>{if(e.target===playerRoot)closeCinemaPlayer()};
  const onKey=e=>{if(e.key==='Escape')closeCinemaPlayer()};
  playerRoot._onKey=onKey;document.addEventListener('keydown',onKey);
