@@ -31,7 +31,7 @@ const typeOf=x=>x.media_type||(x.first_air_date||x.name?'tv':'movie');
 const saveEntry=x=>({id:x.id,media_type:typeOf(x),title:title(x),name:x.name,poster_path:x.poster_path,backdrop_path:x.backdrop_path,overview:x.overview,vote_average:x.vote_average,release_date:x.release_date,first_air_date:x.first_air_date,genre_ids:x.genre_ids});
 
 const metadataCache=new Map();
-async function api(path){if(!KEY&&!TOKEN)return null;const cached=metadataCache.get(path);if(cached&&Date.now()-cached.time<300000)return cached.data;const url=new URL(base+path);url.searchParams.set('language',url.searchParams.get('language')||'ar-SA');if(KEY)url.searchParams.set('api_key',KEY);const r=await fetch(url,{headers:TOKEN?{Authorization:`Bearer ${TOKEN}`}:{}});if(!r.ok)throw Error('TMDB '+r.status);const data=await r.json();if(metadataCache.size>120)metadataCache.clear();metadataCache.set(path,{time:Date.now(),data});return data}
+async function api(path){if(!KEY&&!TOKEN)return null;const cached=metadataCache.get(path);if(cached&&Date.now()-cached.time<300000)return cached.data;const url=new URL(base+path);url.searchParams.set('language',url.searchParams.get('language')||'en-US');if(KEY)url.searchParams.set('api_key',KEY);const r=await fetch(url,{headers:TOKEN?{Authorization:`Bearer ${TOKEN}`}:{}});if(!r.ok)throw Error('TMDB '+r.status);const data=await r.json();if(metadataCache.size>120)metadataCache.clear();metadataCache.set(path,{time:Date.now(),data});return data}
 const year=x=>(x.release_date||x.first_air_date||'').slice(0,4)||'—';
 const title=x=>x.title||x.name||x.original_title||x.original_name||'بدون عنوان';
 const card=x=>`<article class="movie" data-id="${x.id}" data-type="${x.media_type|| (x.first_air_date?'tv':'movie')}"><div class="poster">${x.poster_path?`<img loading="lazy" src="${img(x.poster_path)}" alt=""/>`:`<div class="placeholder">🎬</div>`}<span class="rating">★ ${(x.vote_average||0).toFixed(1)}</span></div><h3>${escapeHTML(title(x))}</h3><p>${year(x)} · ${x.media_type==='tv'||x.first_air_date?'مسلسل':'فيلم'}</p></article>`;
@@ -183,11 +183,22 @@ async function show(id,type){
  if(!modal)return;
  modal.innerHTML='<div class="overlay" id="overlay"><div class="dialog trailer-loading" role="status">جاري تحميل التفاصيل والإعلان الرسمي...</div></div>';
  const [details,trailer]=await Promise.all([
-  api(`/${type}/${encodeURIComponent(id)}?append_to_response=credits,similar`).catch(()=>null),
+  api(`/${type}/${encodeURIComponent(id)}?language=ar-SA&append_to_response=credits,similar`).catch(()=>null),
   getTrailer(type,id)
  ]);
  if(request!==modalRequest||!document.querySelector('#overlay'))return;
  if(details)x={...x,...details};
+ // Keep English display titles and English-language poster art, while retaining Arabic details.
+ const englishDisplay=await api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null);
+ if(request!==modalRequest)return;
+ if(englishDisplay){
+  x={...x,
+   title:type==='movie'?(englishDisplay.title||x.title):x.title,
+   name:type==='tv'?(englishDisplay.name||x.name):x.name,
+   poster_path:englishDisplay.poster_path||x.poster_path,
+   backdrop_path:englishDisplay.backdrop_path||x.backdrop_path
+  };
+ }
  // TMDB often has Arabic metadata without an Arabic synopsis. Fall back to English only for the overview.
  if(!String(x.overview||'').trim()){
   const english=await api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null);
@@ -228,10 +239,10 @@ async function show(id,type){
   const target=document.querySelector('#episode-results');if(!target)return;
   season=String(season);
   target.innerHTML='<p class="trailer-empty">جاري تحميل الحلقات...</p>';
-  try{const data=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(season)}`);
+  try{const data=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(season)}?language=ar-SA`);
    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
    target.innerHTML=(data?.episodes||[]).length?`<div class="episode-grid">${data.episodes.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}">${ep.still_path?`<img src="${img(ep.still_path,'w300')}" loading="lazy" alt="">`:''}<div><strong>${ep.episode_number}. ${escapeHTML(ep.name||'حلقة')}</strong><small>${ep.runtime?`${ep.runtime} دقيقة · `:''}${escapeHTML(ep.air_date||'')} ${ep.vote_average>0?` · ★ ${Number(ep.vote_average).toFixed(1)}`:''} ${ep.air_date&&ep.air_date>new Date().toISOString().slice(0,10)?' · قادمة':''}</small><p>${escapeHTML(ep.overview||'لا يوجد وصف للحلقة.')}</p></div></button>`).join('')}</div>`:'<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';
-   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=()=>{rememberEpisode(x,season,el.dataset.episode);openCinemaPlayer({type:'tv',id,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:v.name})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
+   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=()=>{rememberEpisode(x,season,el.dataset.episode);openCinemaPlayer({type:'tv',id,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:v.name})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
   }catch{if(currentSeasonRequest===seasonRequest&&target.isConnected)target.innerHTML='<p class="trailer-empty">تعذر تحميل الحلقات، حاول مرة أخرى.</p>'}
  }
  if(seasonPicker){seasonPicker.onchange=()=>loadEpisodes(seasonPicker.value);const initial=seasons.some(v=>v.season_number===resume?.season)?resume.season:seasons[0]?.season_number;if(initial){seasonPicker.value=String(initial);loadEpisodes(initial)}}
