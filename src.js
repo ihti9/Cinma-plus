@@ -107,12 +107,13 @@ async function animeMetadata(item){
  if(animeCache.has(key))return animeCache.get(key);
  const result={};
  try{
-  const query='query($search:String){Media(search:$search,type:ANIME){idMal description(asHtml:false) title{romaji english native}}}';
+  const query='query($search:String){Media(search:$search,type:ANIME){id idMal description(asHtml:false) title{romaji english native}}}';
   const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,variables:{search:item.original_name||item.name}})});
   if(r.ok){
    const m=(await r.json()).data?.Media;
    const target=normalizedAnimeTitle(item.original_name||item.name);
    if(m&&target&&[m.title?.romaji,m.title?.english,m.title?.native].some(t=>normalizedAnimeTitle(t)===target)){
+    result.anilistId=m.id;
     result.description=m.description?.replace(/<[^>]*>/g,' ').trim()||'';
     if(m.idMal){
      const jr=await fetch('https://api.jikan.moe/v4/anime/'+encodeURIComponent(m.idMal)+'/episodes?page=1');
@@ -320,7 +321,7 @@ async function show(id,type){
    data.episodes=await Promise.all((data.episodes||[]).map(async ep=>({...ep,overview:await arabicDescription(ep.overview)})));
    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
    target.innerHTML=(data?.episodes||[]).length?`<div class="episode-grid">${data.episodes.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}">${ep.still_path?`<img src="${img(ep.still_path,'w300')}" loading="lazy" alt="">`:''}<div><strong>${ep.episode_number}. ${escapeHTML(/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</strong><small>${ep.runtime?`${ep.runtime} دقيقة · `:''}${escapeHTML(ep.air_date||'')} ${ep.vote_average>0?` · ★ ${Number(ep.vote_average).toFixed(1)}`:''} ${ep.air_date&&ep.air_date>new Date().toISOString().slice(0,10)?' · قادمة':''}</small><p>${escapeHTML(ep.overview||'لا يوجد وصف للحلقة.')}</p></div></button>`).join('')}</div>`:'<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';
-   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=async()=>{rememberEpisode(x,season,el.dataset.episode);const imdbId=await playerImdbId('tv',id);openCinemaPlayer({type:'tv',id,imdbId,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
+   target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=async()=>{rememberEpisode(x,season,el.dataset.episode);const imdbId=await playerImdbId('tv',id);openCinemaPlayer({type:'tv',id,imdbId,anilistId:isAnime(x)?(await animeMetadata(x)).anilistId:0,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
   }catch{if(currentSeasonRequest===seasonRequest&&target.isConnected)target.innerHTML='<p class="trailer-empty">تعذر تحميل الحلقات، حاول مرة أخرى.</p>'}
  }
  if(seasonPicker){seasonPicker.onchange=()=>loadEpisodes(seasonPicker.value);const initial=seasons.some(v=>v.season_number===resume?.season)?resume.season:seasons[0]?.season_number;if(initial){seasonPicker.value=String(initial);loadEpisodes(initial)}}
@@ -336,7 +337,7 @@ async function show(id,type){
   try{localStorage.setItem('cinema_watchlist_v2',JSON.stringify(state.watchlist))}catch(e){console.warn('Unable to save watchlist',e)}
   close();render();show(id,type);
  };
- if(type==='movie'){document.querySelector('#open-movie-player').onclick=async()=>openCinemaPlayer({type:'movie',id,imdbId:await playerImdbId('movie',id),title:title(x),poster_path:x.backdrop_path||x.poster_path});}
+ if(type==='movie'){document.querySelector('#open-movie-player').onclick=async()=>openCinemaPlayer({type:'movie',id,imdbId:await playerImdbId('movie',id),anilistId:isAnime(x)?(await animeMetadata(x)).anilistId:0,title:title(x),poster_path:x.backdrop_path||x.poster_path});}
  document.querySelector('#save').onclick=()=>setWatchStatus(saved?'none':'plan');
  document.querySelector('#watch-status').onchange=e=>setWatchStatus(e.target.value);
 }
