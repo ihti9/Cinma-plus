@@ -4,8 +4,8 @@ const EPISODE_PROGRESS_KEY='cinema_episode_progress_v1';
 const safeRead=(key)=>{try{return JSON.parse(localStorage.getItem(key)||'{}')||{}}catch{return {}}};
 const safeWrite=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value))}catch{}};
 const safeSource=(source)=>{
- if(!source||!['mp4','hls','embed'].includes(source.kind))return false;
- try{const u=new URL(source.url);return u.protocol==='https:'&&!!u.hostname&&!u.username&&!u.password}catch{return false}
+ if(!source||!['mp4','hls','embed','torrent'].includes(source.kind))return false;
+ try{const u=new URL(source.url);return u.protocol==='https:'&&!!u.hostname&&!u.username&&!u.password&&(source.kind!=='torrent'||['hls','mp4'].includes(source.streamKind))}catch{return false}
 };
 const mediaKey=({type,id,season,episode})=>type==='tv'?`tv:${id}:s${season}:e${episode}`:`movie:${id}`;
 const htmlEscape=(value)=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -74,6 +74,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,episo
    return;
   }
   const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.poster=poster_path?`https://image.tmdb.org/t/p/w780${poster_path}`:'';
+  // Torrent entries point to an authorized HTTPS streaming gateway, not a magnet URI.
   video.src=source.url;video.className='cinema-native-video';
   let lastSaved=0;
   const saved=positions[key]?.[source.id];
@@ -81,6 +82,9 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,episo
   video.addEventListener('timeupdate',()=>{if(video.currentTime-lastSaved>=5){lastSaved=video.currentTime;savePosition(video)}});
   video.addEventListener('pause',()=>savePosition(video));
   video.addEventListener('ended',()=>{const data=safeRead(PLAYER_POSITION_KEY);if(data[key])delete data[key][source.id];safeWrite(PLAYER_POSITION_KEY,data)});
+  if(source.kind==='torrent'&&source.streamKind==='hls'&&!video.canPlayType('application/vnd.apple.mpegurl')){
+   const note=document.createElement('p');note.className='cinema-player-error';note.textContent='هذا المتصفح لا يدعم بث HLS مباشرة. استخدم Safari أو مصدر MP4.';screen.appendChild(note);
+  }
   video.addEventListener('error',()=>{const note=document.createElement('p');note.className='cinema-player-error';note.textContent='تعذر تشغيل هذا المصدر. جرّب سيرفرًا آخر.';screen.appendChild(note)});
   video.dataset.server=source.id;screen.appendChild(video);
   if(type==='tv'){
