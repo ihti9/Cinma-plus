@@ -76,3 +76,20 @@ header nav{flex-shrink:0;margin-inline-start:20px}
 .cinema-player-note{font-size:12px;color:#9ba8ba;margin:15px 0 0;line-height:1.8}
 .cinema-player-error{position:absolute;bottom:10px;right:10px;background:#651c29;color:white;padding:8px;border-radius:6px;font-size:12px}
 @media(max-width:600px){.cinema-player-overlay{padding:8px}.cinema-player-top{padding:12px}.cinema-player-controls{padding:14px}.cinema-player-empty>span{font-size:38px}.cinema-player-empty h3{font-size:17px}}
+
+/* v21 — cinematic, Dexter-inspired dedicated watch experience */
+.cinema-player-overlay{padding:0;background:#07090e;align-items:flex-start}
+.cinema-player-shell{width:100%;max-width:1300px;min-height:100vh;border:0;border-radius:0;background:#090c14;box-shadow:none}
+.cinema-player-top{padding:18px clamp(16px,4vw,48px);background:#0b0e16}
+.cinema-player-top small{font-weight:800}
+.cinema-player-screen{width:100%;max-height:75vh;aspect-ratio:16/9;background:radial-gradient(circle at 50% 35%,#20283a,#05070d 75%)}
+.cinema-player-controls{padding:24px clamp(16px,4vw,48px)}
+.cinema-watch-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;font-size:12px;color:#a5afbf}
+.cinema-watch-meta span:first-child{color:#e8b45d;font-weight:800;letter-spacing:1px}
+.cinema-watch-episodes{padding:8px clamp(16px,4vw,48px) 40px}
+.cinema-watch-episodes h3{font-size:20px;margin:0 0 15px}
+.cinema-watch-episode-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px}
+.cinema-watch-episode-list button{background:#151b29;border:1px solid #2a3345;border-radius:12px;color:white;display:flex;flex-direction:column;gap:7px;padding:16px;text-align:right;cursor:pointer}
+.cinema-watch-episode-list button:hover,.cinema-watch-episode-list button.active{border-color:#e8b45d;background:#222435}
+.cinema-watch-episode-list small{color:#aab4c4;line-height:1.5}
+@media(max-width:600px){.cinema-player-shell{min-height:100dvh}.cinema-player-screen{aspect-ratio:16/10}.cinema-watch-episode-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cinema-watch-episode-list button{padding:11px}}
