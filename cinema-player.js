@@ -85,6 +85,8 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  closeButton.focus();
 
  const aniButton=playerRoot.querySelector('#cinema-anipm-play');
+ // All anime use the same episode-selection behavior, including season changes.
+ const playAnimeEpisode=()=>{if(aniButton&&!aniButton.disabled)aniButton.click()};
  if(aniButton&&!Number(anilistId)){
   const fallback=playerRoot.querySelector('#cinema-anipm-fallback');fallback.style.display='block';aniButton.removeAttribute('tabindex');aniButton.removeAttribute('aria-hidden');
   aniButton.disabled=true;aniButton.textContent='Ani.pm — لم يُحدد معرّف AniList';
@@ -99,7 +101,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   screen.setAttribute('role','button');
   screen.setAttribute('tabindex','0');
   screen.setAttribute('aria-label','اضغط لتشغيل الحلقة عبر Ani.pm');
-  screen.onclick=event=>{if(event.target.closest('video, iframe, button, input'))return;if(!aniButton.disabled)aniButton.click()};
+  screen.onclick=event=>{if(event.target.closest('video, iframe, button, input'))return;playAnimeEpisode()};
   screen.onkeydown=event=>{if((event.key==='Enter'||event.key===' ')&&!screen.querySelector('video, iframe')&&!aniButton.disabled){event.preventDefault();aniButton.click()}};
  }
  if(aniButton)aniButton.onclick=()=>{
@@ -161,7 +163,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  }
  if(!isAnime)loadAddon();
  if(!sources.length){
-  screen.innerHTML=aniButton?'<div class="cinema-player-empty"><span>▶</span><h3>اضغط على الشاشة لتشغيل الحلقة</h3><p>سيُفتح مشغل Ani.pm هنا مباشرة.</p></div>':'<div class="cinema-player-empty"><span>▶</span><h3>جاري البحث عن رابط تشغيل</h3><p>سيبدأ الفيديو تلقائيًا عند توفر مصدر مباشر متوافق.</p></div>';
+  screen.innerHTML=aniButton?'<div class="cinema-player-empty"><span>▶</span><h3>اضغط على الشاشة لتشغيل الحلقة '+Number(episode)+'</h3><p>اختر حلقة من القائمة لتغيير الحلقة.</p></div>':'<div class="cinema-player-empty"><span>▶</span><h3>جاري البحث عن رابط تشغيل</h3><p>سيبدأ الفيديو تلقائيًا عند توفر مصدر مباشر متوافق.</p></div>';
   list.innerHTML='<span class="cinema-server-unavailable">لا توجد سيرفرات متاحة حاليًا</span>';
   return;
  }
