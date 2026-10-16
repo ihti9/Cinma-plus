@@ -108,6 +108,12 @@ async function animeMetadata(item){
  const result={};
  // Bleach (2004) is AniList 269; do not confuse it with Thousand-Year Blood War.
  const animeNames=[item.original_name,item.name,item.english_name,item.english_title].map(normalizedAnimeTitle);
+ // One Piece uses a Japanese TMDB original title; AniList identifies the original series as 21.
+ if(animeNames.includes('onepiece')||animeNames.includes('ワンピース')){
+  result.anilistId=21;
+  animeCache.set(key,result);
+  return result;
+ }
  if(animeNames.includes('bleach')&&!animeNames.some(n=>n.includes('thousandyearbloodwar')||n.includes('sennenkessenhen'))){
   result.anilistId=269;
   animeCache.set(key,result);
