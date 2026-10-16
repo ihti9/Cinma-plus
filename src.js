@@ -93,6 +93,55 @@ async function load(view='trending',q='',append=false){
 }
 
 // Optional public metadata enrichment. No Wikipedia/Wikidata and no playback links.
+// Anime metadata and translation are best-effort; never associate titles without an exact match.
+const animeCache=new Map();
+const normalizedAnimeTitle=t=>String(t||'').toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff]/g,'');
+async function animeMetadata(item){
+ const key=item.id;
+ if(animeCache.has(key))return animeCache.get(key);
+ const result={};
+ try{
+  const query='query($search:String){Media(search:$search,type:ANIME){idMal description(asHtml:false) title{romaji english native}}}';
+  const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,variables:{search:item.original_name||item.name}})});
+  if(r.ok){
+   const m=(await r.json()).data?.Media;
+   const target=normalizedAnimeTitle(item.original_name||item.name);
+   if(m&&target&&[m.title?.romaji,m.title?.english,m.title?.native].some(t=>normalizedAnimeTitle(t)===target)){
+    result.description=m.description?.replace(/<[^>]*>/g,' ').trim()||'';
+    if(m.idMal){
+     const jr=await fetch('https://api.jikan.moe/v4/anime/'+encodeURIComponent(m.idMal)+'/episodes?page=1');
+     if(jr.ok)result.episodes=(await jr.json()).data||[];
+    }
+   }
+  }
+ }catch(e){console.info('Anime metadata unavailable',e)}
+ animeCache.set(key,result);return result;
+}
+const translationCache=new Map();
+async function arabicDescription(text){
+ text=String(text||'').trim();
+ if(!text||/[\u0600-\u06ff]/.test(text))return text;
+ if(translationCache.has(text))return translationCache.get(text);
+ // Public MyMemory translation has length/rate limits; keep the original on failure.
+ let translated=text;
+ try{
+  const chunks=text.match(/[\s\S]{1,450}/g)||[];
+  if(chunks.length>4)return text;
+  const out=[];
+  for(const chunk of chunks){
+   const u=new URL('https://api.mymemory.translated.net/get');
+   u.searchParams.set('q',chunk);u.searchParams.set('langpair','en|ar');
+   const r=await fetch(u);
+   if(!r.ok)throw Error('translation unavailable');
+   const d=await r.json(),value=d.responseData?.translatedText;
+   if(d.responseStatus!==200||!value||!/[\u0600-\u06ff]/.test(value))throw Error('translation missing');
+   out.push(value);
+  }
+  translated=out.join(' ');
+ }catch(e){console.info('Arabic translation unavailable',e)}
+ translationCache.set(text,translated);return translated;
+}
+
 async function enrichDetails(type,id,item){
  const parts=[];
  try{
@@ -211,6 +260,10 @@ async function show(id,type){
   if(String(english?.overview||'').trim())x.overview=english.overview;
   if(!String(x.overview||'').trim())x.overview=await fallbackSynopsis(type,id,x);
  }
+ if(isAnime(x)&&!String(x.overview||'').trim()){
+  const anime=await animeMetadata(x);x.overview=anime.description||x.overview;
+ }
+ x.overview=await arabicDescription(x.overview);
  const extra=await enrichDetails(type,id,x).catch(()=>({}));
  if(request!==modalRequest)return;
  const key=`${type}:${id}`,existing=state.watchlist.find(v=>`${v.media_type}:${v.id}`===key),saved=!!existing;
@@ -250,6 +303,15 @@ async function show(id,type){
     const englishByNumber=new Map((en?.episodes||[]).map(ep=>[ep.episode_number,ep]));
     data.episodes=data.episodes.map(ep=>({...ep,overview:ep.overview||englishByNumber.get(ep.episode_number)?.overview||''}));
    }
+   if(isAnime(x)){
+    const metadata=await animeMetadata(x);
+    const byNumber=new Map((metadata.episodes||[]).map(ep=>[ep.mal_id,ep]));
+    data.episodes=(data.episodes||[]).map(ep=>{
+     const j=byNumber.get(ep.episode_number);
+     return {...ep,overview:ep.overview||j?.synopsis||'',name:ep.name||j?.title||''};
+    });
+   }
+   data.episodes=await Promise.all((data.episodes||[]).map(async ep=>({...ep,overview:await arabicDescription(ep.overview)})));
    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
    target.innerHTML=(data?.episodes||[]).length?`<div class="episode-grid">${data.episodes.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}">${ep.still_path?`<img src="${img(ep.still_path,'w300')}" loading="lazy" alt="">`:''}<div><strong>${ep.episode_number}. ${escapeHTML(/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</strong><small>${ep.runtime?`${ep.runtime} دقيقة · `:''}${escapeHTML(ep.air_date||'')} ${ep.vote_average>0?` · ★ ${Number(ep.vote_average).toFixed(1)}`:''} ${ep.air_date&&ep.air_date>new Date().toISOString().slice(0,10)?' · قادمة':''}</small><p>${escapeHTML(ep.overview||'لا يوجد وصف للحلقة.')}</p></div></button>`).join('')}</div>`:'<p class="trailer-empty">لا تتوفر تفاصيل الحلقات حاليًا.</p>';
    target.querySelectorAll('[data-episode]').forEach(el=>el.onclick=()=>{rememberEpisode(x,season,el.dataset.episode);openCinemaPlayer({type:'tv',id,title:title(x),season:Number(season),episode:Number(el.dataset.episode),poster_path:x.backdrop_path||x.poster_path,episodes:(data?.episodes||[]).map(ep=>({number:ep.episode_number,name:/^episode\s*\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:ep.name,still_path:ep.still_path})),seasons:seasons.map(v=>({number:v.season_number,name:'الموسم '+v.season_number})),loadSeasonEpisodes:async(nextSeason)=>{const seasonData=await api(`/tv/${encodeURIComponent(id)}/season/${encodeURIComponent(nextSeason)}?language=ar-SA`);return(seasonData?.episodes||[]).map(ep=>({number:ep.episode_number,name:ep.name,still_path:ep.still_path}))}});target.querySelectorAll('[data-episode]').forEach(card=>card.classList.toggle('episode-current',card===el));el.scrollIntoView({behavior:'smooth',block:'nearest'});});
