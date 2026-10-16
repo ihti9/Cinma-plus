@@ -106,13 +106,10 @@ async function show(id,type){
 
 // CINEMA+ Explore collections — powered by TMDB discovery and watch-provider metadata.
 const collectionGroups=[
- {name:'استكشف',items:[['🎬','أحدث الأفلام','latest-movies'],['📺','أحدث المسلسلات','latest-tv'],['🔥','الرائج الآن','trending'],['⭐','الأعلى تقييمًا','top-rated'],['🍿','أفلام شائعة','popular-movies'],['✨','مسلسلات شائعة','popular-tv']]},
  {name:'منصات البث',items:[['NETFLIX','نتفليكس','provider:8'],['prime video','أمازون برايم','provider:119'],['Apple TV+','آبل تي في','provider:350'],['Disney+','ديزني بلس','provider:337'],['Hulu','هولو','provider:15'],['Max','ماكس','provider:1899'],['Paramount+','باراماونت بلس','provider:531']]},
- {name:'الشبكات التلفزيونية',items:[['HBO','إتش بي أو','network:49'],['AMC','إيه إم سي','network:174'],['FX','إف إكس','network:88'],['ABC','إيه بي سي','network:2'],['NBC','إن بي سي','network:6'],['BBC','بي بي سي','network:4'],['Adult Swim','أدلت سويم','network:80']]},
  {name:'التصنيفات',items:[['⚔️','أكشن','genre:28'],['👻','رعب','genre:27'],['😂','كوميديا','genre:35'],['🚀','خيال علمي','genre:878'],['🎭','دراما','genre:18'],['🕵️','جريمة','genre:80'],['🧩','غموض','genre:9648'],['🎨','أنيميشن','genre:16'],['💞','رومانسي','genre:10749']]},
- {name:'مجموعات مميزة',items:[['🏆','الأعلى تقييمًا','top-rated'],['🎥','أفلام هذا العام','latest-movies'],['🌟','مسلسلات جديدة','latest-tv'],['📈','الأكثر رواجًا','trending']]}
 ];
-function discoveryMarkup(){return `<section class="discovery" id="discovery"><div class="discover-heading"><small>تصفّح على طريقتك</small><h2>استكشف CINEMA+</h2><p>اختر منصة أو شبكة أو تصنيفًا لتشاهد الأعمال المرتبطة به.</p></div>${collectionGroups.map(group=>`<div class="collection-group"><div class="collection-heading"><h3>${group.name}</h3><span>اسحب للمزيد ←</span></div><div class="collection-scroll">${group.items.map(([symbol,label,key])=>`<button type="button" class="collection-tile" data-collection="${key}"><span class="collection-symbol">${escapeHTML(symbol)}</span><span class="collection-label">${escapeHTML(label)}</span></button>`).join('')}</div></div>`).join('')}</section>`}
+function discoveryMarkup(){return `<section class="discovery" id="discovery">${collectionGroups.map(group=>`<div class="collection-group"><div class="collection-heading"><h3>${group.name}</h3><span>اسحب للمزيد ←</span></div><div class="collection-scroll">${group.items.map(([symbol,label,key])=>`<button type="button" class="collection-tile" data-collection="${key}"><span class="collection-symbol">${escapeHTML(symbol)}</span><span class="collection-label">${escapeHTML(label)}</span></button>`).join('')}</div></div>`).join('')}</section>`}
 async function openCollection(key){
  const request=++state.request;
  state.view='collection';state.query='';state.genre='';state.year='';state.page=1;state.loading=true;state.items=[];state.error='';
