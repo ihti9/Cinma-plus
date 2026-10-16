@@ -155,4 +155,6 @@ header nav{flex-shrink:0;margin-inline-start:20px}
 .dexter-season-label select:disabled{opacity:.55}
 .dexter-season-loading{color:#aab5c7;padding:20px 10px;text-align:center;font-size:13px}
 @media(max-width:520px){.dexter-sidebar-head{flex-wrap:wrap}.dexter-season-label select{max-width:190px}}
-\n/* Keep scrolling responsive on touch devices and avoid repainting offscreen lists. */\nhtml{scroll-behavior:smooth;-webkit-text-size-adjust:100%}body{-webkit-overflow-scrolling:touch}img{content-visibility:auto}button,a{-webkit-tap-highlight-color:transparent}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}\n
+
+/* Keep scrolling responsive on touch devices and avoid repainting offscreen lists. */
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}body{-webkit-overflow-scrolling:touch}img{content-visibility:auto}button,a{-webkit-tap-highlight-color:transparent}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
