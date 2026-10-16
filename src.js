@@ -31,7 +31,7 @@ const typeOf=x=>x.media_type||(x.first_air_date||x.name?'tv':'movie');
 const saveEntry=x=>({id:x.id,media_type:typeOf(x),title:title(x),name:x.name,poster_path:x.poster_path,backdrop_path:x.backdrop_path,overview:x.overview,vote_average:x.vote_average,release_date:x.release_date,first_air_date:x.first_air_date,genre_ids:x.genre_ids});
 
 const metadataCache=new Map();
-async function api(path){if(!KEY&&!TOKEN)return null;const cached=metadataCache.get(path);if(cached&&Date.now()-cached.time<300000)return cached.data;const url=new URL(base+path);url.searchParams.set('language','ar-SA');if(KEY)url.searchParams.set('api_key',KEY);const r=await fetch(url,{headers:TOKEN?{Authorization:`Bearer ${TOKEN}`}:{}});if(!r.ok)throw Error('TMDB '+r.status);const data=await r.json();if(metadataCache.size>120)metadataCache.clear();metadataCache.set(path,{time:Date.now(),data});return data}
+async function api(path){if(!KEY&&!TOKEN)return null;const cached=metadataCache.get(path);if(cached&&Date.now()-cached.time<300000)return cached.data;const url=new URL(base+path);url.searchParams.set('language',url.searchParams.get('language')||'ar-SA');if(KEY)url.searchParams.set('api_key',KEY);const r=await fetch(url,{headers:TOKEN?{Authorization:`Bearer ${TOKEN}`}:{}});if(!r.ok)throw Error('TMDB '+r.status);const data=await r.json();if(metadataCache.size>120)metadataCache.clear();metadataCache.set(path,{time:Date.now(),data});return data}
 const year=x=>(x.release_date||x.first_air_date||'').slice(0,4)||'—';
 const title=x=>x.title||x.name||x.original_title||x.original_name||'بدون عنوان';
 const card=x=>`<article class="movie" data-id="${x.id}" data-type="${x.media_type|| (x.first_air_date?'tv':'movie')}"><div class="poster">${x.poster_path?`<img loading="lazy" src="${img(x.poster_path)}" alt=""/>`:`<div class="placeholder">🎬</div>`}<span class="rating">★ ${(x.vote_average||0).toFixed(1)}</span></div><h3>${escapeHTML(title(x))}</h3><p>${year(x)} · ${x.media_type==='tv'||x.first_air_date?'مسلسل':'فيلم'}</p></article>`;
@@ -156,6 +156,12 @@ async function show(id,type){
  ]);
  if(request!==modalRequest||!document.querySelector('#overlay'))return;
  if(details)x={...x,...details};
+ // TMDB often has Arabic metadata without an Arabic synopsis. Fall back to English only for the overview.
+ if(!String(x.overview||'').trim()){
+  const english=await api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null);
+  if(request!==modalRequest)return;
+  if(String(english?.overview||'').trim())x.overview=english.overview;
+ }
  const extra=await enrichDetails(type,id,x).catch(()=>({}));
  if(request!==modalRequest)return;
  const key=`${type}:${id}`,existing=state.watchlist.find(v=>`${v.media_type}:${v.id}`===key),saved=!!existing;
