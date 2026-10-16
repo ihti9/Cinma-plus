@@ -110,3 +110,40 @@ header nav{flex-shrink:0;margin-inline-start:20px}
 .netflix-seasons .episode-card small{display:block;color:#aeb8c8;line-height:1.7}
 .netflix-seasons .episode-card p{color:#c3c9d3;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:6px 0 0}
 @media(max-width:600px){.netflix-episodes-head h3{font-size:20px}.netflix-seasons .episode-card{grid-template-columns:112px minmax(0,1fr);gap:10px;padding:9px}.netflix-seasons .episode-card strong{font-size:13px}.netflix-seasons .episode-card small{font-size:11px}.netflix-seasons .episode-card p{font-size:11px;-webkit-line-clamp:2}.netflix-season-picker select{min-width:125px;max-width:190px}}
+
+/* CINEMA+ v23 — Dexter-inspired player page, RTL and mobile-first */
+.dexter-watch{max-width:1500px;background:#0a0d14}
+.dexter-watch .cinema-player-top{position:sticky;top:0;z-index:3;border-bottom:1px solid #202737;display:flex;justify-content:space-between;align-items:center;background:#0c1019;padding:14px 26px}
+.dexter-watch-brand{display:flex;align-items:center;gap:18px;color:#fff}
+.dexter-watch-brand>span{font-size:22px;font-weight:900;letter-spacing:1px}
+.dexter-watch-plus{color:#e8b45d}
+.dexter-watch-brand small{color:#a9b5c5;font-size:12px}
+.dexter-watch .cinema-player-close{width:auto;height:auto;border-radius:9px;padding:8px 14px;font-size:14px;display:flex;align-items:center;gap:8px}
+.dexter-watch-content{display:grid;grid-template-columns:minmax(0,1fr) 310px;align-items:start;gap:0;direction:rtl}
+.dexter-watch-main{min-width:0;padding:22px clamp(12px,2.4vw,30px)}
+.dexter-watch-title{margin-bottom:18px}
+.dexter-watch-title small{color:#e8b45d;font-weight:700}
+.dexter-watch-title h2{font-size:clamp(18px,2.5vw,27px);margin:7px 0 0;color:white}
+.dexter-watch .cinema-player-screen{width:100%;aspect-ratio:16/9;max-height:none;border:1px solid #283144;border-radius:12px;overflow:hidden}
+.dexter-watch-toolbar{display:flex;justify-content:space-between;gap:10px;color:#aeb8c8;font-size:12px;padding:14px 2px;border-bottom:1px solid #252c3a}
+.dexter-watch .cinema-player-controls{padding:20px 0}
+.dexter-watch .cinema-watch-meta{margin-bottom:13px}
+.dexter-watch .cinema-watch-meta span:first-child{color:white;font-size:17px}
+.dexter-watch .cinema-server-list button{min-width:110px}
+.dexter-watch-navigation{display:flex;gap:12px;justify-content:space-between;margin:14px 0 24px}
+.dexter-watch-navigation button{background:#202839;color:white;border:1px solid #394459;border-radius:9px;padding:12px 18px;cursor:pointer}
+.dexter-watch-navigation button:disabled{opacity:.35;cursor:not-allowed}
+.dexter-watch-sidebar{border-right:1px solid #273042;padding:20px 14px;background:#101520;min-height:calc(100vh - 72px);position:sticky;top:72px;max-height:calc(100vh - 72px);overflow-y:auto}
+.dexter-sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 6px 14px;border-bottom:1px solid #293243;margin-bottom:10px}
+.dexter-sidebar-head h3{font-size:18px;margin:0}
+.dexter-sidebar-head small{color:#a9b5c5}
+.dexter-watch .cinema-watch-episode-list{display:flex;flex-direction:column;gap:8px}
+.dexter-watch .cinema-watch-episode-list button{display:flex;flex-direction:row;align-items:center;gap:10px;text-align:right;padding:8px;background:#171e2b}
+.dexter-watch .cinema-watch-episode-list button.active{border-color:#e8b45d;background:#282736}
+.dexter-watch .cinema-watch-episode-list button img,.dexter-episode-placeholder{width:90px;aspect-ratio:16/9;object-fit:cover;border-radius:5px;flex-shrink:0}
+.dexter-episode-placeholder{display:grid;place-items:center;background:#252e3e;color:#e8b45d}
+.dexter-watch .cinema-watch-episode-list button span:last-child{min-width:0;display:flex;flex-direction:column;gap:4px}
+.dexter-watch .cinema-watch-episode-list button strong{font-size:13px}
+.dexter-watch .cinema-watch-episode-list button small{font-size:11px;line-height:1.4}
+@media(max-width:850px){.dexter-watch-content{grid-template-columns:1fr}.dexter-watch-sidebar{position:static;max-height:none;min-height:0;border-right:0;border-top:1px solid #293243}.dexter-watch .cinema-watch-episode-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.dexter-watch .cinema-watch-episode-list button img,.dexter-episode-placeholder{width:75px}}
+@media(max-width:520px){.dexter-watch .cinema-player-top{padding:10px 12px}.dexter-watch-brand>span{font-size:18px}.dexter-watch-brand small{display:none}.dexter-watch-main{padding:14px 10px}.dexter-watch .cinema-watch-episode-list{grid-template-columns:1fr}.dexter-watch .cinema-watch-episode-list button img,.dexter-episode-placeholder{width:96px}.dexter-watch .cinema-player-screen{border-radius:6px}.dexter-watch-toolbar{font-size:11px}}
