@@ -1,6 +1,7 @@
 import './style.css';
 const KEY=import.meta.env.VITE_TMDB_API_KEY;
 const TOKEN=import.meta.env.VITE_TMDB_READ_TOKEN;
+const OMDB_KEY=import.meta.env.VITE_OMDB_API_KEY;
 const base='https://api.themoviedb.org/3';
 const img=(p,size='w500')=>p?`https://image.tmdb.org/t/p/${size}${p}`:'';
 const demo=[{id:1,title:'رحلة إلى المجهول',original_title:'The Unknown Journey',overview:'مغامرة مشوقة في عالم من الأسرار والاكتشافات.',vote_average:8.6,release_date:'2025-03-10',genre_ids:[12],media_type:'movie',poster_path:null,backdrop_path:null},{id:2,title:'المدينة الأخيرة',overview:'حين تتغير المدينة، تبدأ حكاية جديدة.',vote_average:8.2,release_date:'2024-09-11',genre_ids:[18],media_type:'tv'},{id:3,title:'ما وراء النجوم',overview:'رحلة خيال علمي عبر حدود الكون.',vote_average:7.9,release_date:'2025-01-02',genre_ids:[878],media_type:'movie'},{id:4,title:'الظل',overview:'لغز يختبئ خلف كل باب.',vote_average:8.1,release_date:'2023-11-10',genre_ids:[9648],media_type:'tv'},{id:5,title:'ليلة في البحر',overview:'حكاية إنسانية عن الشجاعة والأمل.',vote_average:7.8,release_date:'2025-05-14',genre_ids:[18],media_type:'movie'},{id:6,title:'الطريق',overview:'أصدقاء يجتمعون في رحلة تغير حياتهم.',vote_average:8.0,release_date:'2024-02-22',genre_ids:[12],media_type:'movie'}];
@@ -17,10 +18,10 @@ const title=x=>x.title||x.name||x.original_title||x.original_name||'بدون ع�
 const card=x=>`<article class="movie" data-id="${x.id}" data-type="${x.media_type|| (x.first_air_date?'tv':'movie')}"><div class="poster">${x.poster_path?`<img loading="lazy" src="${img(x.poster_path)}" alt=""/>`:`<div class="placeholder">🎬</div>`}<span class="rating">★ ${(x.vote_average||0).toFixed(1)}</span></div><h3>${escapeHTML(title(x))}</h3><p>${year(x)} · ${x.media_type==='tv'||x.first_air_date?'مسلسل':'فيلم'}</p></article>`;
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function render(){let items=state.view==='saved'?state.watchlist.filter(x=>(!state.genre||(x.genre_ids||[]).includes(Number(state.genre)))&&(!state.year||year(x)===state.year)):state.items;const hero=items[0]||demo[0];document.querySelector('#app').innerHTML=`<header><a class="brand" href="#">CINEMA<span>+</span></a><nav><button data-view="trending" class="${state.view==='trending'?'active':''}">الرئيسية</button><button data-view="movie" class="${state.view==='movie'?'active':''}">أفلام</button><button data-view="tv" class="${state.view==='tv'?'active':''}">مسلسلات</button><button data-view="saved" class="${state.view==='saved'?'active':''}">قائمتي</button></nav><button id="menu" aria-label="القائمة">☰</button></header><main><section class="hero" style="${hero.backdrop_path?`background-image:linear-gradient(90deg,rgba(9,11,18,.8),rgba(9,11,18,.25)),linear-gradient(0deg,#090b12,transparent),url('${img(hero.backdrop_path,'original')}')`:''}"><div class="hero-content"><div class="eyebrow">✦ اكتشف عالم الترفيه</div><h1>قصص تستحق<br><em>المشاهدة</em></h1><p>اكتشف أحدث الأفلام والمسلسلات وتفاصيلها وتقييماتها في مكان واحد.</p><button class="primary" id="explore">استكشف الآن ←</button></div></section>${state.view==='trending'?discoveryMarkup()+editorialMarkup():''}<section class="catalog" id="catalog"><div class="section-head"><div><small>مكتبتك السينمائية</small><h2>${({trending:'الأكثر رواجًا',movie:'أحدث الأفلام',tv:'المسلسلات الرائجة',saved:'قائمتي المفضلة',search:'نتائج البحث',collection:state.collectionLabel||'المجموعة'})[state.view]}</h2></div><div class="search"><span>⌕</span><input id="search" placeholder="ابحث عن فيلم أو مسلسل..." value="${escapeHTML(state.query)}" aria-label="بحث" /></div></div>${state.error?`<p class="notice">${escapeHTML(state.error)}</p>`:''}<div class="filters"><label>التصنيف <select id="genre"><option value="">الكل</option>${Object.entries(genres).map(([id,label])=>`<option value="${id}" ${state.genre===id?'selected':''}>${label}</option>`).join('')}</select></label><label>السنة <select id="year"><option value="">كل السنوات</option>${Array.from({length:25},(_,i)=>String(new Date().getFullYear()-i)).map(y=>`<option value="${y}" ${state.year===y?'selected':''}>${y}</option>`).join('')}</select></label><label>الترتيب <select id="sort"><option value="popularity.desc" ${state.sort==='popularity.desc'?'selected':''}>الأكثر شعبية</option><option value="vote_average.desc" ${state.sort==='vote_average.desc'?'selected':''}>الأعلى تقييمًا</option><option value="primary_release_date.desc" ${state.sort==='primary_release_date.desc'?'selected':''}>الأحدث</option></select></label></div><div class="grid">${state.loading?'<p class="empty">جاري تحميل النتائج...</p>':items.length?items.map(card).join(''):'<p class="empty">لا توجد نتائج حاليًا.</p>'}</div>${!state.loading&&state.view!=='saved'&&state.view!=='search'&&state.page<state.totalPages?'<button class="primary more" id="more">عرض المزيد</button>':''}</section></main><footer>© ${new Date().getFullYear()} CINEMA+ · بيانات الأفلام مقدمة من TMDB · هذا الموقع غير تابع لـ TMDB</footer><div id="modal-root"></div>`;bind();}
-function bind(){document.querySelectorAll(".shelf-card").forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelectorAll("[data-shelf]").forEach(el=>el.onclick=()=>openShelf(el.dataset.shelf));document.querySelectorAll("[data-collection]").forEach(el=>el.onclick=()=>openCollection(el.dataset.collection));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>load(b.dataset.view));document.querySelector('#explore').onclick=()=>document.querySelector('#catalog').scrollIntoView({behavior:'smooth'});document.querySelector('#search').oninput=e=>{const q=e.target.value;state.query=q;clearTimeout(window.searchTimer);window.searchTimer=setTimeout(()=>{if(q.trim())load('search',q);else load('trending')},450)};document.querySelectorAll('.movie').forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelector('#menu').onclick=()=>document.querySelector('nav').classList.toggle('open');document.querySelectorAll('#genre,#year,#sort').forEach(el=>el.onchange=e=>{state[e.target.id]=e.target.value;load(state.view==='collection'?'trending':state.view,state.query)});const more=document.querySelector('#more');if(more)more.onclick=()=>load(state.view,'',true)}
+function bind(){document.querySelectorAll(".shelf-card").forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelectorAll("[data-shelf]").forEach(el=>el.onclick=()=>openShelf(el.dataset.shelf));document.querySelectorAll("[data-collection]").forEach(el=>el.onclick=()=>openCollection(el.dataset.collection));document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>load(b.dataset.view));document.querySelector('#explore').onclick=()=>document.querySelector('#catalog').scrollIntoView({behavior:'smooth'});document.querySelector('#search').oninput=e=>{const q=e.target.value;state.query=q;clearTimeout(window.searchTimer);window.searchTimer=setTimeout(()=>{if(q.trim())load('search',q);else load('trending')},450)};document.querySelectorAll('.movie').forEach(el=>el.onclick=()=>show(el.dataset.id,el.dataset.type));document.querySelector('#menu').onclick=()=>document.querySelector('nav').classList.toggle('open');document.querySelectorAll('#genre,#year,#sort').forEach(el=>el.onchange=e=>{state[e.target.id]=e.target.value;load(state.view==='collection'?'trending':state.view,state.query)});const more=document.querySelector('#more');if(more)more.onclick=()=>state.view==='collection'&&activeShelf?loadShelfMore():load(state.view,'',true)}
 async function load(view='trending',q='',append=false){
  const request=++state.request;
- if(!append){state.view=view;state.query=q;state.page=1;state.items=[];}
+ if(!append){activeShelf=null;state.view=view;state.query=q;state.page=1;state.items=[];}
  else state.page++;
  state.loading=true;state.error='';render();
  if(view==='saved'){state.loading=false;render();return;}
@@ -49,6 +50,40 @@ async function load(view='trending',q='',append=false){
  }
  state.loading=false;render();
 }
+
+// Optional public metadata enrichment. No Wikipedia/Wikidata and no playback links.
+async function enrichDetails(type,id,item){
+ const parts=[];
+ try{
+  const ids=await api(`/${type}/${id}/external_ids`);
+  if(OMDB_KEY&&ids?.imdb_id){
+   const r=await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(OMDB_KEY)}&i=${encodeURIComponent(ids.imdb_id)}`);
+   if(r.ok){const d=await r.json();if(d.Response==='True'&&d.imdbRating&&d.imdbRating!=='N/A')parts.push(`تقييم IMDb: ${escapeHTML(d.imdbRating)}/10`)}
+  }
+  if(type==='tv'&&ids?.tvdb_id){
+   // TVmaze uses TVDB IDs to avoid inaccurate title-only matching.
+   const r=await fetch(`https://api.tvmaze.com/lookup/shows?thetvdb=${encodeURIComponent(ids.tvdb_id)}`);
+   if(r.ok){const d=await r.json();if(d.status)parts.push(`حالة المسلسل: ${escapeHTML(d.status)}`);if(d.network?.name)parts.push(`الشبكة: ${escapeHTML(d.network.name)}`)}
+  }
+ }catch(e){console.info('Additional metadata unavailable',e)}
+ if(type==='tv'&&item.original_language==='ja'){
+  try{
+   const query='query ($search:String){Media(search:$search,type:ANIME){title{romaji english native}episodes status studios{nodes{name}}}}';
+   const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query,variables:{search:item.original_name||item.name}})});
+   if(r.ok){const a=(await r.json()).data?.Media;
+    // Only add data for a close title match to prevent misattribution.
+    const norm=t=>String(t||'').toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff]/g,'');
+    const target=norm(item.original_name||item.name);
+    if(a&&target&&[a.title?.romaji,a.title?.english,a.title?.native].some(t=>norm(t)===target)){
+     if(a.episodes)parts.push(`حلقات الأنمي: ${a.episodes}`);
+     if(a.studios?.nodes?.length)parts.push(`الاستوديو: ${escapeHTML(a.studios.nodes.map(n=>n.name).slice(0,2).join('، '))}`);
+    }
+   }
+  }catch(e){console.info('AniList unavailable',e)}
+ }
+ return {html:parts.length?`<div class="metadata-extra"><h3>معلومات إضافية</h3><p>${parts.join(' · ')}</p></div>`:''};
+}
+
 // TMDB video metadata is public; only trusted YouTube keys are embedded.
 const validYoutubeKey=key=>typeof key==='string'&&/^[A-Za-z0-9_-]{11}$/.test(key);
 function selectTrailer(videos){
@@ -70,7 +105,7 @@ async function getTrailer(type,id){
 let modalRequest=0;
 async function show(id,type){
  const request=++modalRequest;
- let x=[...state.items,...state.watchlist].find(a=>String(a.id)===String(id)&&typeOf(a)===type);
+ let x=[...state.items,...Object.values(shelfData).flat(),...state.watchlist].find(a=>String(a.id)===String(id)&&typeOf(a)===type);
  if(!x)return;
  const modal=document.querySelector('#modal-root');
  if(!modal)return;
@@ -81,8 +116,10 @@ async function show(id,type){
  ]);
  if(request!==modalRequest||!document.querySelector('#overlay'))return;
  if(details)x={...x,...details};
+ const extra=await enrichDetails(type,id,x).catch(()=>({}));
+ if(request!==modalRequest)return;
  const key=`${type}:${id}`,saved=state.watchlist.some(v=>`${v.media_type}:${v.id}`===key);
- modal.innerHTML=`<div class="overlay" id="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-label="تفاصيل ${escapeHTML(title(x))}"><button class="close" id="close" aria-label="إغلاق">×</button><div class="dialog-img">${x.backdrop_path?`<img src="${img(x.backdrop_path,'w1280')}" alt=""/>`:''}</div><div class="dialog-body"><small>★ ${(x.vote_average||0).toFixed(1)} · ${year(x)} · ${type==='tv'?'مسلسل':'فيلم'}</small><h2>${escapeHTML(title(x))}</h2><p>${escapeHTML(x.overview||'لا يوجد وصف متاح.')}</p><div class="trailer-section"><h3>الإعلان الرسمي</h3>${trailer?`<div class="trailer-placeholder" id="trailer-placeholder"><button class="primary" id="play-trailer" type="button">▶ شاهد الإعلان الرسمي</button><span>من YouTube عبر TMDB</span></div>`:'<p class="trailer-empty">لا يتوفر إعلان رسمي لهذا العنوان حاليًا.</p>'}</div>${type==='tv'&&x.seasons?.length?`<div class="seasons"><h3>المواسم والحلقات</h3>${x.seasons.map(v=>`<div class="season"><strong>${escapeHTML(v.name)}</strong><span>${v.episode_count||0} حلقة · ${escapeHTML(v.air_date||'موعد غير محدد')}</span></div>`).join('')}</div>`:''}<div class="actions"><button class="primary" id="save">${saved?'✓ تمت الإضافة إلى قائمتي':'+ أضف إلى قائمتي'}</button><a class="secondary" target="_blank" rel="noopener noreferrer" href="https://www.themoviedb.org/${type}/${encodeURIComponent(id)}">تفاصيل TMDB ↗</a></div><p class="disclaimer">يعرض الموقع إعلانات YouTube الرسمية فقط، ولا يوفر الأفلام أو الحلقات كاملة.</p></div></div></div>`;
+ modal.innerHTML=`<div class="overlay" id="overlay"><div class="dialog" role="dialog" aria-modal="true" aria-label="تفاصيل ${escapeHTML(title(x))}"><button class="close" id="close" aria-label="إغلاق">×</button><div class="dialog-img">${x.backdrop_path?`<img src="${img(x.backdrop_path,'w1280')}" alt=""/>`:''}</div><div class="dialog-body"><small>★ ${(x.vote_average||0).toFixed(1)} · ${year(x)} · ${type==='tv'?'مسلسل':'فيلم'}</small><h2>${escapeHTML(title(x))}</h2><p>${escapeHTML(x.overview||'لا يوجد وصف متاح.')}</p>${extra.html||''}<div class="trailer-section"><h3>الإعلان الرسمي</h3>${trailer?`<div class="trailer-placeholder" id="trailer-placeholder"><button class="primary" id="play-trailer" type="button">▶ شاهد الإعلان الرسمي</button><span>من YouTube عبر TMDB</span></div>`:'<p class="trailer-empty">لا يتوفر إعلان رسمي لهذا العنوان حاليًا.</p>'}</div>${type==='tv'&&x.seasons?.length?`<div class="seasons"><h3>المواسم والحلقات</h3>${x.seasons.map(v=>`<div class="season"><strong>${escapeHTML(v.name)}</strong><span>${v.episode_count||0} حلقة · ${escapeHTML(v.air_date||'موعد غير محدد')}</span></div>`).join('')}</div>`:''}<div class="actions"><button class="primary" id="save">${saved?'✓ تمت الإضافة إلى قائمتي':'+ أضف إلى قائمتي'}</button><a class="secondary" target="_blank" rel="noopener noreferrer" href="https://www.themoviedb.org/${type}/${encodeURIComponent(id)}">تفاصيل TMDB ↗</a></div><p class="disclaimer">يعرض الموقع إعلانات YouTube الرسمية فقط، ولا يوفر الأفلام أو الحلقات كاملة.</p></div></div></div>`;
  const close=()=>{modalRequest++;modal.innerHTML='';document.removeEventListener('keydown',escapeClose)};
  const escapeClose=e=>{if(e.key==='Escape')close()};
  document.addEventListener('keydown',escapeClose,{once:false});
@@ -113,7 +150,9 @@ function discoveryMarkup(){return `<section class="discovery" id="discovery">${c
 
 // CINEMA+ v7: curated, mobile-first shelves powered by TMDB. No streaming links.
 const editorialShelves=[
- {id:'arabic',title:'أفلام وأعمال تلفزيونية عربية',paths:['/discover/tv?with_original_language=ar&sort_by=popularity.desc','/discover/movie?with_original_language=ar&sort_by=popularity.desc']},
+ {id:'saudi',title:'أفلام ومسلسلات سعودية',paths:['/discover/tv?with_origin_country=SA&sort_by=popularity.desc','/discover/movie?with_origin_country=SA&sort_by=popularity.desc']},
+ {id:'gulf',title:'دراما خليجية',paths:['/discover/tv?with_origin_country=KW|AE|BH|QA|OM&with_genres=18&sort_by=popularity.desc','/discover/movie?with_origin_country=KW|AE|BH|QA|OM&with_genres=18&sort_by=popularity.desc']},
+ {id:'anime',title:'عالم الأنمي',paths:['/discover/tv?with_original_language=ja&with_genres=16&sort_by=popularity.desc','/discover/movie?with_original_language=ja&with_genres=16&sort_by=popularity.desc']},
  {id:'usdrama',title:'دراما أمريكية',paths:['/discover/tv?with_origin_country=US&with_genres=18&sort_by=popularity.desc']},
  {id:'drama',title:'حان وقت الدراما',paths:['/discover/tv?with_genres=18&sort_by=vote_count.desc']},
  {id:'action',title:'أفلام الأكشن والإثارة',paths:['/discover/movie?with_genres=28&sort_by=popularity.desc']},
@@ -122,12 +161,54 @@ const editorialShelves=[
  {id:'new',title:'أحدث الأفلام والمسلسلات',paths:['/movie/now_playing','/tv/on_the_air']}
 ];
 let shelfData={},shelfLoaded=false,shelfLoading=false;
-function editorialMarkup(){return `<div class="editorial-shelves" id="editorial-shelves">${editorialShelves.map(sh=>`<section class="editorial-shelf"><div class="shelf-head"><h2>${sh.title}</h2><button data-shelf="${sh.id}" type="button">عرض الكل ‹</button></div><div class="shelf-scroll">${(shelfData[sh.id]||[]).length?(shelfData[sh.id]||[]).slice(0,12).map(x=>`<button class="shelf-card" data-id="${x.id}" data-type="${typeOf(x)}" type="button"><img src="${img(x.poster_path,'w342')}" loading="lazy" alt="${escapeHTML(title(x))}"><span>${escapeHTML(title(x))}</span><small>${typeOf(x)==='tv'?'مسلسل':'فيلم'} · ${year(x)||''}</small></button>`).join(''):'<p class="shelf-wait">'+(shelfLoading?'جاري تحميل الأعمال...':'ستظهر الأعمال هنا عند توفر بيانات TMDB')+'</p>'}</div></section>`).join('')}</div>`}
-async function fetchShelves(){if(shelfLoading||shelfLoaded||(!KEY&&!TOKEN))return;shelfLoading=true;const requests=editorialShelves.map(async sh=>{try{const responses=await Promise.all(sh.paths.map(path=>api(path)));const all=responses.flatMap(r=>r?.results||[]).filter(x=>x.poster_path);const unique=[...new Map(all.map(x=>[typeOf(x)+':'+x.id,{...x,media_type:typeOf(x)}])).values()];shelfData[sh.id]=unique.sort((a,b)=>(b.popularity||0)-(a.popularity||0)).slice(0,18)}catch(e){console.warn('Shelf load failed',sh.id,e);shelfData[sh.id]=[]}});await Promise.all(requests);shelfLoading=false;shelfLoaded=true;if(state.view==='trending')render()}
-async function openShelf(id){const sh=editorialShelves.find(x=>x.id===id);if(!sh)return;state.view='collection';state.collectionLabel=sh.title;state.items=shelfData[id]||[];state.query='';state.genre='';state.year='';state.loading=false;state.page=1;state.totalPages=1;state.error=state.items.length?'':'لا توجد نتائج لهذا القسم حاليًا';render();document.querySelector('#catalog')?.scrollIntoView({behavior:'smooth'})}
+function editorialMarkup(){return `<div class="editorial-shelves" id="editorial-shelves">${editorialShelves.map(sh=>`<section class="editorial-shelf"><div class="shelf-head"><h2>${sh.title}</h2><button data-shelf="${sh.id}" type="button">عرض الكل ‹</button></div><div class="shelf-scroll">${(shelfData[sh.id]||[]).length?(shelfData[sh.id]||[]).slice(0,10).map(x=>`<button class="shelf-card" data-id="${x.id}" data-type="${typeOf(x)}" type="button"><img src="${img(x.poster_path,'w342')}" loading="lazy" alt="${escapeHTML(title(x))}"><span>${escapeHTML(title(x))}</span><small>${typeOf(x)==='tv'?'مسلسل':'فيلم'} · ${year(x)||''}</small></button>`).join(''):'<p class="shelf-wait">'+(shelfLoading?'جاري تحميل الأعمال...':'ستظهر الأعمال هنا عند توفر بيانات TMDB')+'</p>'}</div></section>`).join('')}</div>`}
+async function fetchShelves(){
+ if(shelfLoading||shelfLoaded||(!KEY&&!TOKEN))return;
+ shelfLoading=true;
+ await Promise.all(editorialShelves.map(async sh=>{
+  try{
+   const pages=await Promise.all(sh.paths.map(path=>api(path)));
+   const items=pages.flatMap(r=>r?.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:typeOf(x)}));
+   shelfData[sh.id]=[...new Map(items.map(x=>[x.media_type+':'+x.id,x])).values()].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  }catch(e){console.warn('Shelf load failed',sh.id,e);shelfData[sh.id]=[]}
+ }));
+ shelfLoading=false;shelfLoaded=true;if(state.view==='trending')render();
+}
+let activeShelf=null,shelfPages={},shelfExhausted=false,shelfBusy=false;
+async function openShelf(id){
+ const sh=editorialShelves.find(x=>x.id===id);if(!sh)return;
+ ++state.request;activeShelf=id;shelfPages={};shelfExhausted=false;shelfBusy=false;
+ state.view='collection';state.collectionLabel=sh.title;state.items=[...(shelfData[id]||[])];
+ state.query='';state.genre='';state.year='';state.loading=false;state.page=1;
+ state.totalPages=2;state.error='';render();
+ document.querySelector('#catalog')?.scrollIntoView({behavior:'smooth'});
+ if(!state.items.length)await loadShelfMore();
+}
+async function loadShelfMore(){
+ const sh=editorialShelves.find(x=>x.id===activeShelf);
+ if(!sh||shelfBusy||shelfExhausted)return;
+ shelfBusy=true;const token=state.request;
+ const next=[];let remaining=false;
+ try{
+  // Load subsequent TMDB pages from every source; retain all available titles.
+  for(const path of sh.paths){
+   const page=(shelfPages[path]||1)+1;
+   const data=await api(path+(path.includes('?')?'&':'?')+'page='+page);
+   if(token!==state.request)return;
+   shelfPages[path]=page;
+   next.push(...(data?.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:typeOf(x)})));
+   if(page<Math.min(data?.total_pages||1,500))remaining=true;
+  }
+  const seen=new Set(state.items.map(x=>typeOf(x)+':'+x.id));
+  state.items.push(...next.filter(x=>{const k=typeOf(x)+':'+x.id;if(seen.has(k))return false;seen.add(k);return true}));
+  shelfExhausted=!remaining;state.totalPages=shelfExhausted?1:2;
+  state.page=1;state.error=state.items.length?'':'لا توجد نتائج متاحة لهذا القسم.';
+ }catch(e){state.error='تعذر تحميل المزيد، حاول مجددًا.';console.warn(e)}
+ finally{shelfBusy=false;if(token===state.request)render()}
+}
 
 async function openCollection(key){
- const request=++state.request;
+ const request=++state.request;activeShelf=null;
  state.view='collection';state.query='';state.genre='';state.year='';state.page=1;state.loading=true;state.items=[];state.error='';
  const found=collectionGroups.flatMap(g=>g.items).find(item=>item[2]===key);
  const label=found?.[1]||'المجموعة';
