@@ -114,7 +114,7 @@ async function animeMetadata(item){
   return result;
  }
  try{
-  const query='query($search:String){Media(search:$search,type:ANIME){id idMal description(asHtml:false) title{romaji english native synonyms}}}';
+  const query='query($search:String){Media(search:$search,type:ANIME){id idMal description(asHtml:false) title{romaji english native} synonyms}}';
   const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,variables:{search:item.original_name||item.name}})});
   if(r.ok){
    const m=(await r.json()).data?.Media;
