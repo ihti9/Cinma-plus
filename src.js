@@ -271,18 +271,18 @@ async function show(id,type){
  const modal=document.querySelector('#modal-root');
  if(!modal)return;
  modal.innerHTML='<div class="overlay" id="overlay"><div class="dialog trailer-loading" role="status">جاري تحميل التفاصيل والإعلان الرسمي...</div></div>';
- const [details,trailer]=await Promise.all([
+ // Load the primary details and English title concurrently; trailer discovery must not block the dialog.
+ const [details,englishDisplay]=await Promise.all([
   api(`/${type}/${encodeURIComponent(id)}?language=ar-SA&append_to_response=credits,similar`).catch(()=>null),
-  getTrailer(type,id)
+  api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null)
  ]);
+ const trailer=null;
  if(request!==modalRequest||!document.querySelector('#overlay'))return;
  if(details)x={...x,...details};
  // Prefer the officially published original-language title, including Arabic Gulf/Saudi titles.
  if(x.original_title&&type==='movie')x.title=x.original_title;
  if(x.original_name&&type==='tv')x.name=x.original_name;
  // Keep English display titles and English-language poster art, while retaining Arabic details.
- const englishDisplay=await api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null);
- if(request!==modalRequest)return;
  if(englishDisplay){
   if(isAnime(x)){x.english_title=englishDisplay.title||'';x.english_name=englishDisplay.name||'';}
   x={...x,
@@ -292,18 +292,8 @@ async function show(id,type){
    backdrop_path:x.backdrop_path||englishDisplay.backdrop_path
   };
  }
- // TMDB often has Arabic metadata without an Arabic synopsis. Fall back to English only for the overview.
- if(!String(x.overview||'').trim()){
-  const english=await api(`/${type}/${encodeURIComponent(id)}?language=en-US`).catch(()=>null);
-  if(request!==modalRequest)return;
-  if(String(english?.overview||'').trim())x.overview=english.overview;
-  if(!String(x.overview||'').trim())x.overview=await fallbackSynopsis(type,id,x);
- }
- if(isAnime(x)&&!String(x.overview||'').trim()){
-  const anime=await animeMetadata(x);x.overview=anime.description||x.overview;
- }
- x.overview=await arabicDescription(x.overview);
- const extra=await enrichDetails(type,id,x).catch(()=>({}));
+ // Keep details responsive: external synopsis enrichment/translation is not on the critical path.
+ if(!String(x.overview||'').trim())x.overview=englishDisplay?.overview||'';
  if(request!==modalRequest)return;
  const key=`${type}:${id}`,existing=state.watchlist.find(v=>`${v.media_type}:${v.id}`===key),saved=!!existing;
  const cast=(details?.credits?.cast||[]).slice(0,12);
