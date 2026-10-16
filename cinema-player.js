@@ -99,7 +99,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const existing=screen.querySelector('video');if(existing)existing.pause();
   screen.replaceChildren();
   const iframe=document.createElement('iframe');iframe.src=`https://ani.pm/embed/ani/${aniId}/${ep}/sub`;
-  iframe.title='Ani.pm — '+heading;iframe.style.cssText='width:100%;aspect-ratio:16/9;border:0';iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media; screen-wake-lock';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';
+  iframe.title='Ani.pm — '+heading;iframe.dir='ltr';iframe.setAttribute('dir','ltr');iframe.style.cssText='width:100%;aspect-ratio:16/9;border:0;direction:ltr';iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media; screen-wake-lock';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';
   screen.appendChild(iframe);
  };
  const libraryInput=playerRoot.querySelector('#cinema-library-url');
