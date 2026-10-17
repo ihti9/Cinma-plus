@@ -643,3 +643,26 @@ async function loadCollectionMore(){
 
 load();
 fetchShelves();
+
+
+/* Prevent accidental iOS pull-to-refresh while preserving normal page scrolling. */
+(function preventAccidentalPullRefresh(){
+ if(!('ontouchstart' in window))return;
+ let startX=0,startY=0,startedAtTop=false;
+ document.addEventListener('touchstart',event=>{
+  if(event.touches.length!==1){startedAtTop=false;return}
+  const touch=event.touches[0];
+  startX=touch.clientX;startY=touch.clientY;
+  startedAtTop=window.scrollY<=1&&document.documentElement.scrollTop<=1;
+ },{passive:true});
+ document.addEventListener('touchmove',event=>{
+  if(!startedAtTop||event.touches.length!==1||!event.cancelable)return;
+  const touch=event.touches[0],dy=touch.clientY-startY,dx=touch.clientX-startX;
+  if(dy<=8||Math.abs(dx)>Math.abs(dy))return;
+  const target=event.target;
+  if(target.closest('input,textarea,select,[contenteditable="true"],.overlay,.cinema-player-overlay,[data-scrollable]'))return;
+  event.preventDefault();
+ },{passive:false});
+ document.addEventListener('touchend',()=>{startedAtTop=false},{passive:true});
+ document.addEventListener('touchcancel',()=>{startedAtTop=false},{passive:true});
+})();
