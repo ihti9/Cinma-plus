@@ -66,6 +66,36 @@ async function api(path){
  metadataPending.set(path,request);
  try{return await request}finally{metadataPending.delete(path)}
 }
+// Prefer TVmaze's verified episode metadata for TV series, with TMDB as fallback.
+const tvmazeEpisodeCache=new Map();
+async function tvmazeEpisodesForSeries(id,season){
+ const key=id+':'+season;
+ if(tvmazeEpisodeCache.has(key))return tvmazeEpisodeCache.get(key);
+ const task=(async()=>{
+  try{
+   const ids=await api('/tv/'+encodeURIComponent(id)+'/external_ids');
+   if(!ids?.tvdb_id)return null;
+   const lookup=await fetch('https://api.tvmaze.com/lookup/shows?thetvdb='+encodeURIComponent(ids.tvdb_id));
+   if(!lookup.ok)return null;
+   const show=await lookup.json();
+   if(!show?.id)return null;
+   const response=await fetch('https://api.tvmaze.com/shows/'+encodeURIComponent(show.id)+'/episodes');
+   if(!response.ok)return null;
+   const episodes=await response.json();
+   if(!Array.isArray(episodes))return null;
+   const stripHtml=value=>String(value||'').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();
+   return episodes.filter(ep=>ep.season===Number(season)).map(ep=>({
+    episode_number:ep.number,
+    name:ep.name||'',
+    overview:stripHtml(ep.summary),
+    runtime:ep.runtime||null,
+    tvmaze_image:ep.image?.medium||ep.image?.original||''
+   })).filter(ep=>Number.isInteger(ep.episode_number));
+  }catch(e){console.info('TVmaze episodes unavailable',e);return null}
+ })();
+ tvmazeEpisodeCache.set(key,task);
+ return task;
+}
 const year=x=>(x.release_date||x.first_air_date||'').slice(0,4)||'—';
 const isAnime=x=>x.original_language==='ja'&&((x.genre_ids||[]).includes(16)||(x.genres||[]).some(g=>g.id===16));
 const englishAnimeTitle=x=>{
@@ -376,7 +406,13 @@ async function show(id,type){
    // Show the episode list immediately after TMDB responds. Enrichment must not block navigation.
    // Optional descriptions and translations can be fetched separately in future.
    if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
-   const allEpisodes=data?.episodes||[];
+   const tmdbEpisodes=data?.episodes||[];
+   const mazeEpisodes=await tvmazeEpisodesForSeries(id,season);
+   if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!target.isConnected)return;
+   const tmdbByNumber=new Map(tmdbEpisodes.map(ep=>[ep.episode_number,ep]));
+   const allEpisodes=mazeEpisodes?.length
+    ?mazeEpisodes.map(ep=>{const original=tmdbByNumber.get(ep.episode_number)||{};return {...original,...ep,still_path:original.still_path||null,name:ep.name||original.name||'',overview:ep.overview||original.overview||''}})
+    :tmdbEpisodes;
    const episodeGrid=document.createElement('div');
    episodeGrid.className='episode-grid';
    target.replaceChildren(episodeGrid);
@@ -387,7 +423,7 @@ async function show(id,type){
     if(request!==modalRequest||currentSeasonRequest!==seasonRequest||!episodeGrid.isConnected)return;
     const batch=allEpisodes.slice(rendered,rendered+30);
     if(!batch.length)return;
-    episodeGrid.insertAdjacentHTML('beforeend',batch.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}"><span class="episode-thumbnail">${ep.still_path?`<img src="${img(ep.still_path,'w300')}" loading="lazy" decoding="async" alt="">`:'<span class="episode-thumbnail-fallback">▶</span>'}<span class="episode-play-icon">▶</span></span><div class="episode-copy"><strong>الحلقة ${ep.episode_number}</strong><span>${escapeHTML(/^episode\\s*\\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</span>${ep.runtime?`<small>${ep.runtime} دقيقة</small>`:''}</div></button>`).join(''));
+    episodeGrid.insertAdjacentHTML('beforeend',batch.map(ep=>`<button type="button" class="episode-card ${episodeProgress['tv:'+id]?.season===Number(season)&&episodeProgress['tv:'+id]?.episode===ep.episode_number?'episode-current':''}" data-episode="${ep.episode_number}"><span class="episode-thumbnail">${ep.tvmaze_image||ep.still_path?`<img src="${ep.tvmaze_image?escapeHTML(ep.tvmaze_image):img(ep.still_path,'w300')}" loading="lazy" decoding="async" alt="">`:'<span class="episode-thumbnail-fallback">▶</span>'}<span class="episode-play-icon">▶</span></span><div class="episode-copy"><strong>الحلقة ${ep.episode_number}</strong><span>${escapeHTML(/^episode\\s*\\d+$/i.test(ep.name||'')?'الحلقة '+ep.episode_number:(ep.name||'الحلقة '+ep.episode_number))}</span>${ep.runtime?`<small>${ep.runtime} دقيقة</small>`:''}</div></button>`).join(''));
     rendered+=batch.length;
     episodeGrid.querySelectorAll('[data-episode]:not([data-bound])').forEach(el=>{
      el.dataset.bound='1';
