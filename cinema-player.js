@@ -49,7 +49,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   ?`https://vidlink.pro/tv/${vidlinkId}/${Number(season)}/${Number(episode)}`
   :`https://vidlink.pro/movie/${vidlinkId}`):'';
  const vidlinkSources=vidlinkUrl?[{id:'vidlink',name:'▶ VidLink',kind:'embed',url:vidlinkUrl}]:[];
- const sources=[...(isAnime?[...vidlinkSources,...vidsrcSources]:[...vidsrcSources,...vidlinkSources]),...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
+ const sources=[...[...vidlinkSources,...vidsrcSources],...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
  const positions=safeRead(PLAYER_POSITION_KEY);
  const heading=type==='tv'?`${title} · الموسم ${season} الحلقة ${episode}`:title;
  playerRoot=document.createElement('div');
