@@ -149,9 +149,12 @@ async function animeMetadata(item){
  if(normalized.includes('onepiece')||normalized.includes('ワンピース')){result.anilistId=21;animeCache.set(key,result);return result}
  if(normalized.includes('bleach')&&!normalized.some(n=>n.includes('thousandyearbloodwar')||n.includes('sennenkessenhen'))){result.anilistId=269;animeCache.set(key,result);return result}
  const year=Number(String(item.first_air_date||item.release_date||'').slice(0,4));
- const modern=year>=2020;
- const query='query($search:String){Page(page:1,perPage:12){media(search:$search,type:ANIME){id idMal description(asHtml:false) startDate{year} title{romaji english native} synonyms}}}';
- const searches=[...new Set(names)].filter(Boolean).slice(0,modern?4:1);
+ // Five-year cohorts: 1990–94, 1995–99, 2000–04, 2005–09, 2010–14, 2015–19, 2020.
+ const historical=year>=1990&&year<=2020;
+ const cohortStart=historical?1990+Math.floor((year-1990)/5)*5:0;
+ if(cohortStart)result.releaseCohort=cohortStart+'–'+Math.min(cohortStart+4,2020);
+ const query='query($search:String){Page(page:1,perPage:20){media(search:$search,type:ANIME){id idMal description(asHtml:false) startDate{year} title{romaji english native} synonyms}}}';
+ const searches=[...new Set(names)].filter(Boolean).slice(0,year>=1990?4:1);
  let best=null,bestScore=-1;
  try{
   for(const search of searches){
@@ -164,11 +167,12 @@ async function animeMetadata(item){
     if(!exact)continue;
     const delta=year&&m.startDate?.year?Math.abs(year-m.startDate.year):null;
     // Modern titles often have separate AniList entries for sequels; avoid mixing distant releases.
-    if(modern&&delta!==null&&delta>2)continue;
+    if(year>=1990&&delta!==null&&delta>2)continue;
+    if(historical&&m.startDate?.year&&Math.abs(m.startDate.year-year)>2)continue;
     const score=100+(delta===null?0:Math.max(0,12-delta*5))+(aliases.includes(normalizedAnimeTitle(item.original_name))?4:0);
     if(score>bestScore){best=m;bestScore=score}
    }
-   if(best&&(!modern||bestScore>=112))break;
+   if(best&&bestScore>=112)break;
   }
   if(best){
    result.anilistId=best.id;
