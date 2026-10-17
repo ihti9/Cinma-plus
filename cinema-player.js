@@ -328,6 +328,11 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   }catch{addonStatus.textContent='تعذر الاتصال بالإضافة؛ قد تكون CORS غير مفعّلة.'}
  }
  if(!isAnime)loadAddon();
+ if(sources.length){
+  sources.forEach((source,index)=>{const button=document.createElement('button');button.type='button';button.dataset.server=source.id;button.textContent=source.name||`سيرفر ${index+1}`;button.onclick=()=>selectSource(source);list.appendChild(button)});
+  selectSource(sources[0]);
+  return;
+ }
  if(!sources.length){
   screen.innerHTML=aniButton?'<div class="cinema-player-empty"><span>▶</span><h3>اضغط على الشاشة لتشغيل الحلقة '+Number(episode)+'</h3><p>اختر حلقة من القائمة لتغيير الحلقة.</p></div>':'<div class="cinema-player-empty"><span>▶</span><h3>جاري البحث عن رابط تشغيل</h3><p>سيبدأ الفيديو تلقائيًا عند توفر مصدر مباشر متوافق.</p></div>';
   list.innerHTML='<span class="cinema-server-unavailable">لا توجد سيرفرات متاحة حاليًا</span>';
