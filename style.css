@@ -548,3 +548,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  }
  #app>main{border-left:0!important;border-right:0!important;box-shadow:none!important}
 }
+
+
+/* v68 — fix RTL grid placement leaving unused space on iPad */
+@media (min-width:900px){
+ #app{direction:ltr!important;grid-template-columns:var(--sidebar-width) minmax(0,1fr)!important}
+ #app>header{direction:rtl!important}
+ #app>header nav{direction:rtl!important;left:0!important;right:auto!important}
+ #app>main{direction:rtl!important;grid-column:2!important;min-width:0!important;width:100%!important;max-width:none!important;justify-self:stretch!important}
+ #app>main>.catalog,#app>main>.editorial-shelves,#app>main>.discovery{box-sizing:border-box;width:100%;max-width:none}
+}
