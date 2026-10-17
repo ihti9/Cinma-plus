@@ -93,7 +93,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const help=document.createElement('p');help.style.cssText='font-size:12px;margin:8px 0';help.textContent='لم يتم تأكيد تطابق عنوان الأنمي مع AniList. جرّب عنوانًا آخر أو أضف معرّف AniList الصحيح.';
   aniButton.parentElement.appendChild(help);
   const input=document.createElement('input');input.type='number';input.min='1';input.step='1';input.placeholder='معرّف AniList';input.style.cssText='width:160px;max-width:100%;padding:8px';aniButton.parentElement.appendChild(input);
-  const manual=document.createElement('button');manual.type='button';manual.textContent='فتح المشغل';manual.onclick=()=>{const value=Number(input.value);if(Number.isSafeInteger(value)&&value>0){aniButton.disabled=false;anilistId=value;aniButton.click()}};aniButton.parentElement.appendChild(manual);
+  const manual=document.createElement('button');manual.type='button';manual.textContent='فتح المشغل';manual.onclick=()=>{const value=Number(input.value);if(Number.isSafeInteger(value)&&value>0){try{const storageKey='cinema-anilist-links-v1';const links=JSON.parse(localStorage.getItem(storageKey)||'{}');links[type+':'+id]=value;localStorage.setItem(storageKey,JSON.stringify(links))}catch(e){}aniButton.disabled=false;anilistId=value;aniButton.click()}};aniButton.parentElement.appendChild(manual);
  }
 
  if(aniButton){
