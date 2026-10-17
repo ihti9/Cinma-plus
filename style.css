@@ -537,3 +537,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @media (min-width:900px) and (max-width:1366px) and (orientation:portrait){
  #app{--sidebar-width:180px}
 }
+
+
+/* v67 — seamless sidebar without dividing line */
+@media (min-width:900px){
+ #app>header nav{
+  border-right:0!important;
+  border-left:0!important;
+  box-shadow:none!important;
+ }
+ #app>main{border-left:0!important;border-right:0!important;box-shadow:none!important}
+}
