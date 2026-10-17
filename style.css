@@ -255,3 +255,46 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @media(max-width:699px){
  #app .episode-grid{grid-template-columns:1fr}
 }
+
+
+/* v60 — approved iPhone, iPad and Windows design system */
+:root{--cinema-accent:#f12f48;--cinema-panel:#111722;--cinema-border:#283344}
+#app{background:#090d15}
+#app>header{background:#0d121d;border-bottom:1px solid #263040}
+#app .brand{font-weight:900;letter-spacing:-.8px}
+#app .brand span{color:var(--cinema-accent)}
+#app .hero{background-position:center;box-shadow:inset 0 -70px 95px rgba(5,9,17,.55)}
+#app .primary{background:linear-gradient(120deg,#ff344c,#df1537);border:0;box-shadow:0 8px 22px rgba(237,30,63,.2)}
+#app .movie{transition:transform .2s ease,filter .2s ease}
+#app .movie:hover{transform:translateY(-4px)}
+#app .poster{border-radius:12px;overflow:hidden}
+#app .search{background:#151c29;border:1px solid #303c4e;border-radius:14px}
+#app .search:focus-within{border-color:#f04465}
+#app .mobile-bottom-nav{display:none}
+@media(min-width:900px){
+ #app>header nav button.active{background:linear-gradient(100deg,#c61934,#95152a)!important;color:#fff!important;border-color:#da2a48!important}
+ #app>header nav button{transition:background .15s ease}
+ #app .hero{border:1px solid #222c3b}
+ #app .catalog{max-width:1700px}
+}
+@media(min-width:700px) and (max-width:899px){
+ #app .hero{margin:12px 20px 0;border-radius:18px;height:350px;overflow:hidden}
+ #app .hero h1{font-size:clamp(36px,5vw,55px)}
+ #app .catalog{padding-inline:24px}
+ #app .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:699px){
+ #app>header{height:62px;padding-inline:16px}
+ #app>header nav{display:none!important}
+ #app #menu{display:none!important}
+ #app>main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ #app .mobile-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(12,17,27,.97);border-top:1px solid #354050;backdrop-filter:blur(16px);padding:8px 5px calc(8px + env(safe-area-inset-bottom,0px));gap:3px}
+ #app .mobile-bottom-nav button{border:0;background:transparent;color:#9eaabd;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:800;min-width:0;min-height:48px;border-radius:11px;padding:4px 0}
+ #app .mobile-bottom-nav button span{font-family:system-ui,sans-serif;font-size:22px;line-height:24px}
+ #app .mobile-bottom-nav button.active{background:#95172b;color:white}
+ #app .hero{min-height:290px;height:320px;padding:28px 18px 26px;margin:9px 10px 0;border-radius:16px;overflow:hidden}
+ #app .hero h1{font-size:clamp(30px,8vw,42px)}
+ #app .catalog{padding:26px 14px 36px}
+ #app .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 12px}
+ #app .cinematic-dialog{max-height:calc(100dvh - 12px)}
+}
