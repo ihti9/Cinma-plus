@@ -558,3 +558,29 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  #app>main{direction:rtl!important;grid-column:2!important;min-width:0!important;width:100%!important;max-width:none!important;justify-self:stretch!important}
  #app>main>.catalog,#app>main>.editorial-shelves,#app>main>.discovery{box-sizing:border-box;width:100%;max-width:none}
 }
+
+
+/* v69 — details modal must float above the fixed navigation, not underneath it */
+#modal-root:not(:empty){
+ position:fixed!important;
+ inset:0!important;
+ width:100vw!important;
+ height:100dvh!important;
+ z-index:10000!important;
+ pointer-events:none;
+ isolation:isolate;
+}
+#modal-root:not(:empty)>.overlay{
+ position:absolute!important;
+ inset:0!important;
+ z-index:1!important;
+ pointer-events:auto;
+}
+#modal-root .cinematic-dialog{
+ box-sizing:border-box;
+}
+@media (min-width:900px) and (orientation:landscape){
+ #modal-root .series-landscape-dialog{
+  max-width:calc(100vw - 32px)!important;
+ }
+}
