@@ -118,11 +118,14 @@ async function load(view='trending',q='',append=false){
      const combined=[...(tv?.results||[]).map(x=>({...x,media_type:'tv'})),...(movies?.results||[]).map(x=>({...x,media_type:'movie'}))];
      const filtered=combined.filter(x=>(!state.genre||(x.genre_ids||[]).includes(Number(state.genre)))&&(!state.year||year(x)===state.year));
      filtered.sort((a,b)=>(state.sort==='vote_average.desc'?(b.vote_average||0)-(a.vote_average||0):(b.popularity||0)-(a.popularity||0)));
+     const oldCount=state.items.length;
      const seen=new Set(append?state.items.map(x=>typeOf(x)+':'+x.id):[]);
      const fresh=filtered.filter(x=>{const k=typeOf(x)+':'+x.id;if(seen.has(k))return false;seen.add(k);return true});
      state.items=append?[...state.items,...fresh]:fresh;
      state.totalPages=Math.min(Math.max(tv?.total_pages||1,movies?.total_pages||1),500);
-     state.loading=false;navigationCache.set(cacheKey,{time:Date.now(),page:state.page,items:state.items,totalPages:state.totalPages});render();return;
+     state.loading=false;navigationCache.set(cacheKey,{time:Date.now(),page:state.page,items:state.items,totalPages:state.totalPages});
+     if(!append||!appendCatalogCards(oldCount))render();
+     return;
    }
    const data=await api(path+(path.includes('?')?'&':'?')+'page='+state.page);
    if(request!==state.request)return;
@@ -474,6 +477,20 @@ let activeShelf=null,shelfPages={},shelfMaxPages={},shelfExhausted=false,shelfBu
 // Automatically load the next page when the visitor approaches the end of the catalog.
 let autoMoreObserver=null;
 let autoMorePending=false;
+// Append newly loaded cards without replacing existing images or resetting iPad Safari layers.
+function appendCatalogCards(oldCount){
+ const grid=document.querySelector('#app>main .catalog .grid');
+ if(!grid||renderedView!==state.view)return false;
+ const added=state.items.slice(oldCount).filter(x=>(!state.minRating||(x.vote_average||0)>=Number(state.minRating))&&(!state.country||(x.origin_country||[]).includes(state.country)||(x.production_countries||[]).some(c=>c.iso_3166_1===state.country)));
+ if(added.length){
+  grid.insertAdjacentHTML('beforeend',added.map(card).join(''));
+  grid.querySelectorAll('.movie:not([data-bound])').forEach(el=>{el.dataset.bound='1';el.onclick=()=>show(el.dataset.id,el.dataset.type)});
+ }
+ const more=document.querySelector('#more');
+ if(state.page>=state.totalPages){autoMoreObserver?.disconnect();autoMoreObserver=null;more?.remove()}
+ else if(more){more.textContent='اسحب للأسفل لتحميل المزيد...';setupAutoMore(more)}
+ return true;
+}
 function triggerAutoMore(){
  if(autoMorePending||state.loading)return;
  if(state.view==='collection'&&(activeShelf?shelfBusy||shelfExhausted:state.page>=state.totalPages))return;
