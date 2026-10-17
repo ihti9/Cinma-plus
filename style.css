@@ -298,3 +298,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  #app .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 12px}
  #app .cinematic-dialog{max-height:calc(100dvh - 12px)}
 }
+
+
+/* v61 — iPad Safari landscape and portrait: readable navigation and proportional content */
+@media (min-width:900px) and (max-width:1366px) and (pointer:coarse){
+ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+ #app{grid-template-columns:clamp(184px,19vw,224px) minmax(0,1fr)}
+ #app>header{height:72px;grid-template-rows:none;padding-inline:22px}
+ #app>header .brand{font-size:25px}
+ #app>header .header-search{width:min(380px,43vw)}
+ #app>header .header-search input{font-size:15px}
+ #app>header nav{top:72px;width:clamp(184px,19vw,224px);padding:22px 12px;gap:9px}
+ #app>header nav:before{font-size:14px;padding:8px 12px 10px}
+ #app>header nav button{font-size:15px;font-weight:800;min-height:52px;padding:12px 15px;white-space:nowrap}
+ #app>main{width:100%;min-width:0}
+ #app .hero{height:clamp(275px,29vw,380px);min-height:0;margin:14px 16px 8px;padding-inline:5%;border-radius:18px}
+ #app .hero h1{font-size:clamp(34px,4.3vw,54px);line-height:1.25}
+ #app .hero p{font-size:14px;line-height:1.8;max-width:440px}
+ #app .catalog{padding-inline:20px}
+ #app .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+ #app .section-head h2{font-size:23px}
+ #app .cinematic-dialog{width:min(900px,calc(100vw - 36px));max-height:calc(100dvh - 28px)}
+ #app .episode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #app .mobile-bottom-nav{display:none}
+}
+@media (min-width:700px) and (max-width:899px) and (pointer:coarse){
+ #app>header{height:70px;padding-inline:18px}
+ #app>header .brand{font-size:22px}
+ #app>header nav{gap:6px}
+ #app>header nav button{font-size:13px;min-height:44px;padding-inline:8px}
+ #app .hero{height:290px;margin:12px 14px 0}
+ #app .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #app .catalog{padding-inline:18px}
+}
+@media (pointer:coarse){
+ #app .movie:hover{transform:none}
+ #app button{touch-action:manipulation}
+}
