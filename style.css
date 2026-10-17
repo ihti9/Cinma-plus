@@ -590,3 +590,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 body > #modal-root:not(:empty){position:fixed!important;inset:0!important;z-index:2147483000!important;isolation:isolate;pointer-events:none}
 body > #modal-root > .overlay{position:absolute!important;inset:0!important;z-index:1!important;pointer-events:auto}
 body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 30px)!important}
+
+
+/* CINEMA+ watch interface refinement */
+.cinema-player-overlay .cinema-player-shell{background:linear-gradient(155deg,#141c2b,#0d121e 75%);border-color:#344158;box-shadow:0 30px 90px #000b}
+.cinema-player-overlay .dexter-watch-main{padding:clamp(12px,2vw,26px)}
+.cinema-player-overlay .dexter-watch-title{margin-bottom:14px}
+.cinema-player-overlay .cinema-player-screen{box-shadow:0 12px 32px #0007;border-color:#3b4860;transition:box-shadow .22s ease,border-color .22s ease}
+.cinema-player-overlay .cinema-player-screen:focus-within{border-color:#d6a64e}
+.cinema-player-overlay .cinema-server-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.cinema-player-overlay .cinema-server-list button{min-height:48px;font-family:inherit;font-size:14px;font-weight:800;border-radius:12px;border:1px solid #44536d;background:#202b3d;color:#e8edf7;transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+.cinema-player-overlay .cinema-server-list button:hover{background:#2e3d55;border-color:#a4b2c8;transform:translateY(-1px)}
+.cinema-player-overlay .cinema-server-list button.active{background:linear-gradient(120deg,#f5c66e,#d9a144);border-color:#f5c66e;color:#161a22;box-shadow:0 5px 18px #e3ad463b}
+.cinema-player-overlay button:focus-visible,.cinema-player-overlay select:focus-visible{outline:3px solid #f5c66e;outline-offset:3px}
+.cinema-player-overlay .cinema-expand-controls{justify-content:space-between}
+.cinema-player-overlay .cinema-expand-controls button{font-family:inherit;font-weight:700;min-height:40px}
+.cinema-player-overlay .cinema-watch-meta{font-weight:700}
+@media(max-width:680px){.cinema-player-overlay .cinema-server-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.cinema-player-overlay .cinema-server-list button{padding:12px 8px;font-size:13px}.cinema-player-overlay .dexter-watch-main{padding:12px}.cinema-player-overlay .cinema-expand-controls span{display:none}}
+@media(prefers-reduced-motion:reduce){.cinema-player-overlay .cinema-server-list button,.cinema-player-overlay .cinema-player-screen{transition:none!important;transform:none!important}}
