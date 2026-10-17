@@ -193,6 +193,41 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   };
   autoArabic.onchange=()=>{paint();status.textContent=autoArabic.checked?'الترجمة التلقائية مفعلة عند توفر ملف إنجليزي؛ قد تتأخر بعض الأسطر.':'الترجمة التلقائية متوقفة'};
   const ensureOverlay=()=>{screen.style.position='relative';screen.appendChild(overlay)};
+  // Pre-generated Arabic subtitles are served as static files, so viewers incur no AI API charges.
+  // A locally selected subtitle is cached per episode on this device.
+  const subtitleStorageKey='cinema_subtitle_v1_'+String(anilistId)+'_'+String(type==='tv'?episode:1);
+  const loadSubtitle=(raw,label)=>{
+   const parsed=[];
+   for(const block of raw.replace(/\r/g,'').split(/\n\s*\n/)){
+    const lines=block.split('\n'),i=lines.findIndex(line=>line.includes('-->'));
+    if(i<0)continue;
+    const times=lines[i].split('-->'),start=time(times[0]),end=time(times[1]);
+    if(start===null||end===null||end<start)continue;
+    const text=lines.slice(i+1).join('\n').replace(/<[^>]+>/g,'').trim();
+    if(text)parsed.push({start,end,text});
+   }
+   if(!parsed.length)return false;
+   cancelAnimationFrame(frame);running=false;elapsed=0;cues=parsed;ensureOverlay();paint();
+   status.textContent='تم تحميل '+cues.length+' سطر ترجمة عربية من '+label+'. شغّل الترجمة مع بداية الفيديو.';
+   return true;
+  };
+  const subtitleEpisode=type==='tv'?Number(episode):1;
+  if(Number.isSafeInteger(Number(anilistId))&&Number(anilistId)>0&&Number.isSafeInteger(subtitleEpisode)&&subtitleEpisode>0){
+   let cached=null;
+   try{cached=localStorage.getItem(subtitleStorageKey)}catch{}
+   if(cached&&loadSubtitle(cached,'ذاكرة الجهاز')){
+    // Local user subtitles take precedence over public subtitles.
+   }else{
+    const subtitleUrl='/subtitles/anilist/'+encodeURIComponent(String(anilistId))+'/'+subtitleEpisode+'.vtt';
+    fetch(subtitleUrl).then(async response=>{
+     if(!response.ok||!response.headers.get('content-type')?.match(/text|vtt|octet-stream/))return;
+     const raw=await response.text();
+     if(playerRoot?.contains(status)&&loadSubtitle(raw,'مكتبة CINEMA+')){
+      status.textContent+=' الترجمة مسبقة التجهيز، ولا تستخدم رصيد AI أثناء المشاهدة.';
+     }
+    }).catch(()=>{});
+   }
+  }
   fileInput.onchange=async()=>{
    try{
     const file=fileInput.files?.[0];if(!file)return;
@@ -229,6 +264,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
     if(!parsed.length)throw Error('صيغة الترجمة غير صالحة');
     cancelAnimationFrame(frame);running=false;elapsed=0;cues=parsed;ensureOverlay();paint();
     status.textContent='تم تحميل '+cues.length+' سطر. اضغط بدء الترجمة عند بدء الفيديو.';
+    if(/\\.(vtt|srt)$/i.test(file.name)){try{localStorage.setItem(subtitleStorageKey,raw.slice(0,1500000))}catch{}}
    }catch(e){status.textContent=e.message||'تعذر قراءة ملف الترجمة'}
   };
   playerRoot.querySelector('#cinema-subtitle-start').onclick=()=>{if(!cues.length){status.textContent='اختر ملف ترجمة أولًا';return}if(!running){running=true;started=performance.now();ensureOverlay();paint()}status.textContent='الترجمة تعمل — اضبط التوقيت عند الحاجة'};
