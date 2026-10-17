@@ -387,3 +387,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  #app{grid-template-columns:180px minmax(0,1fr)!important}
  #app>header nav{width:180px!important}
 }
+
+
+/* v63 — iPad: categories left, search beside CINEMA+ logo on right */
+@media (min-width:900px) and (max-width:1366px){
+ #app{grid-template-columns:minmax(0,1fr) 210px!important}
+ #app>header{direction:rtl!important}
+ #app>header .header-brand-search{display:flex!important;flex-direction:row!important;justify-content:flex-start!important;align-items:center!important;gap:20px!important;width:100%!important}
+ #app>header .brand{flex:0 0 auto;white-space:nowrap}
+ #app>header .header-search{width:min(390px,44vw)!important;margin:0!important;flex:0 1 390px!important}
+ #app>header nav{left:0!important;right:auto!important;border-left:0!important;border-right:1px solid #303a4c!important}
+ #app>main{grid-column:1!important}
+ #app .hero{height:clamp(270px,29vw,345px)!important}
+ #app .hero-content{min-width:0}
+ #app .hero h1{font-size:clamp(32px,3.8vw,50px)!important;line-height:1.28!important}
+}
+@media (min-width:900px) and (max-width:1366px) and (orientation:portrait){
+ #app{grid-template-columns:minmax(0,1fr) 180px!important}
+ #app>header .header-brand-search{gap:12px!important}
+ #app>header .header-search{width:min(330px,46vw)!important}
+}
