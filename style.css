@@ -584,3 +584,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
   max-width:calc(100vw - 32px)!important;
  }
 }
+
+
+/* v70 — modal portal sits above the two-panel layout */
+body > #modal-root:not(:empty){position:fixed!important;inset:0!important;z-index:2147483000!important;isolation:isolate;pointer-events:none}
+body > #modal-root > .overlay{position:absolute!important;inset:0!important;z-index:1!important;pointer-events:auto}
+body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 30px)!important}
