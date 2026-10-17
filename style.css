@@ -209,3 +209,49 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 }
 @media(max-width:380px){.catalog{padding-inline:12px}.grid{gap:16px 9px}.brand{font-size:19px}}
 @media(prefers-reduced-motion:reduce){nav button,.primary,.secondary,.movie,.episode-card,.poster{transition:none!important}}
+
+
+/* v58 — responsive iPad / Windows cinema workspace */
+@media(min-width:900px){
+ #app{display:grid;grid-template-columns:214px minmax(0,1fr);grid-template-rows:76px minmax(0,1fr);min-height:100vh}
+ #app>header{grid-column:1/-1;grid-row:1;position:sticky;top:0;z-index:15;padding-inline:28px;height:76px;justify-content:space-between;gap:24px}
+ #app>header .header-brand-search{display:flex;align-items:center;justify-content:space-between;flex:1;gap:30px;min-width:0}
+ #app>header .header-search{width:min(430px,45vw);margin-inline:auto 0}
+ #app>header nav{position:fixed;top:76px;right:0;bottom:0;width:214px;display:flex!important;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:7px;background:#101522;border-left:1px solid #2b3344;padding:32px 14px;z-index:12;overflow-y:auto;box-shadow:-10px 0 28px rgba(0,0,0,.12)}
+ #app>header nav:before{content:"استكشف";font-size:12px;color:#929bad;font-weight:800;padding:0 13px 12px}
+ #app>header nav button{display:block;text-align:right;border-radius:11px;padding:14px 17px;color:#c4cad5;min-height:48px}
+ #app>header nav button.active{background:rgba(240,68,107,.14);color:#ff6687;border:1px solid rgba(240,68,107,.18)}
+ #app>header nav button:hover{background:#202a3c;color:#fff}
+ #app>main{grid-column:2;grid-row:2;min-width:0;width:100%;overflow:hidden}
+ #app .hero{height:clamp(350px,35vw,490px);padding-inline:6%;border-radius:0 0 20px 20px;margin:0 22px 12px;overflow:hidden}
+ #app .hero-content{max-width:590px}
+ #app .catalog{padding-inline:clamp(24px,4vw,64px)}
+ #app .editorial-shelves,#app .discovery{max-width:100%}
+ #app .section-head{margin-bottom:20px}
+ #app .cinematic-dialog{width:min(1050px,calc(100vw - 70px));max-height:92dvh}
+ #app .cinematic-intro{display:grid;grid-template-columns:minmax(160px,210px) minmax(0,1fr);gap:24px}
+ #app .cinematic-poster{width:100%;max-width:210px}
+ #app .episode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+}
+@media(min-width:1350px){
+ #app{grid-template-columns:244px minmax(0,1fr)}
+ #app>header nav{width:244px;padding-inline:18px}
+ #app .hero{margin-inline:30px}
+ #app .episode-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(min-width:700px) and (max-width:899px){
+ #app>header{padding-inline:24px;gap:14px}
+ #app>header nav{gap:12px}
+ #app>header nav button{font-size:12px}
+ #app .hero{height:390px;padding-inline:5%}
+ #app .catalog{padding-inline:25px}
+ #app .cinematic-dialog{width:min(94vw,820px);max-height:90dvh}
+ #app .episode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+}
+@media(max-width:899px){
+ #app>header nav{z-index:18}
+ #app>main{min-width:0}
+}
+@media(max-width:699px){
+ #app .episode-grid{grid-template-columns:1fr}
+}
