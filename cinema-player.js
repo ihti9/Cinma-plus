@@ -154,10 +154,13 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
     if(dock.parentElement!==screen)screen.appendChild(dock);
     panel.hidden=!panel.hidden;
     toggle.setAttribute('aria-expanded',String(!panel.hidden));
-    if(!panel.hidden){const controls=playerRoot.querySelector('.cinema-player-controls');controls?.prepend(tool);tool.open=true;tool.scrollIntoView({block:'nearest',behavior:'smooth'})}
+    if(!panel.hidden){const controls=playerRoot.querySelector('.cinema-player-controls');controls?.prepend(tool);tool.open=true;tool.scrollIntoView({block:'center',behavior:'smooth'})}
     else panel.appendChild(tool);
    };
-   toolbar?.appendChild(externalButton);
+   // Fixed viewport control remains visible even when toolbar is clipped on iPad.
+   externalButton.id='cinema-subtitle-fixed-button';
+   externalButton.style.cssText='position:fixed!important;bottom:calc(24px + env(safe-area-inset-bottom,0px));right:24px;z-index:2147483646;background:#1656a9;color:white;border:2px solid white;border-radius:999px;padding:13px 18px;font-size:15px;font-weight:800;box-shadow:0 6px 24px #000b;cursor:pointer;min-height:48px;direction:rtl';
+   playerRoot.appendChild(externalButton);
   }
   toggle.onclick=e=>{e.stopPropagation();panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden))};
   dock.append(toggle,panel);
