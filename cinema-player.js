@@ -264,7 +264,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
     if(!parsed.length)throw Error('صيغة الترجمة غير صالحة');
     cancelAnimationFrame(frame);running=false;elapsed=0;cues=parsed;ensureOverlay();paint();
     status.textContent='تم تحميل '+cues.length+' سطر. اضغط بدء الترجمة عند بدء الفيديو.';
-    if(/\\.(vtt|srt)$/i.test(file.name)){try{localStorage.setItem(subtitleStorageKey,raw.slice(0,1500000))}catch{}}
+    if(/\.(vtt|srt)$/i.test(file.name)){try{localStorage.setItem(subtitleStorageKey,raw.slice(0,1500000))}catch{}}
    }catch(e){status.textContent=e.message||'تعذر قراءة ملف الترجمة'}
   };
   playerRoot.querySelector('#cinema-subtitle-start').onclick=()=>{if(!cues.length){status.textContent='اختر ملف ترجمة أولًا';return}if(!running){running=true;started=performance.now();ensureOverlay();paint()}status.textContent='الترجمة تعمل — اضبط التوقيت عند الحاجة'};
