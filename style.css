@@ -436,3 +436,60 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  .episode-grid .episode-card{min-width:0}
  .episode-thumbnail{flex-basis:112px;width:112px}
 }
+
+
+/* v65 — tablet / desktop split series details: overview left, episodes right */
+@media (min-width:900px) and (orientation:landscape){
+ #app .series-landscape-dialog{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.12fr) minmax(350px,.88fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  direction:ltr!important;
+  width:min(1440px,calc(100vw - 32px))!important;
+  height:min(840px,calc(100dvh - 32px))!important;
+  max-height:calc(100dvh - 32px)!important;
+  overflow:hidden!important;
+  position:relative;
+ }
+ #app .series-landscape-dialog>.close{position:absolute;top:14px;left:14px;right:auto;z-index:7}
+ #app .series-landscape-dialog>.cinematic-backdrop{
+  position:absolute!important;top:0;left:0;right:auto;
+  width:56%!important;height:285px!important;z-index:0;
+  pointer-events:none
+ }
+ #app .series-landscape-dialog>.cinematic-intro{
+  grid-column:1!important;grid-row:1!important;
+  direction:rtl!important;display:flex!important;flex-direction:column!important;
+  align-items:stretch!important;gap:14px!important;
+  padding:215px 25px 28px!important;margin:0!important;
+  overflow-y:auto!important;overscroll-behavior:contain;
+  min-width:0!important;min-height:0!important;z-index:1
+ }
+ #app .series-landscape-dialog .cinematic-poster{display:none!important}
+ #app .series-landscape-dialog .cinematic-summary{padding:0!important;min-width:0!important}
+ #app .series-landscape-dialog .cinematic-summary h2{font-size:clamp(25px,2.8vw,42px);line-height:1.25}
+ #app .series-landscape-dialog .cinematic-overview{line-height:1.8;font-size:14px}
+ #app .series-landscape-dialog .cinematic-summary .actions{display:flex;flex-wrap:wrap;gap:10px}
+ #app .series-landscape-dialog>.cinematic-sections{
+  grid-column:2!important;grid-row:1!important;direction:rtl!important;
+  min-width:0!important;min-height:0!important;
+  overflow-y:auto!important;overscroll-behavior:contain;
+  padding:22px 18px 32px!important;
+  border-left:1px solid #30384a;background:#0b111c;
+ }
+ #app .series-landscape-dialog .netflix-seasons{margin:0!important;padding:0!important;border:0!important}
+ #app .series-landscape-dialog .netflix-episodes-head{position:sticky;top:-22px;z-index:3;background:#0b111cf2;padding:16px 0 12px;backdrop-filter:blur(8px)}
+ #app .series-landscape-dialog .episode-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:9px!important}
+ #app .series-landscape-dialog .episode-card{display:flex!important;flex-direction:row!important;align-items:center!important;gap:12px!important;min-width:0!important;width:100%!important}
+ #app .series-landscape-dialog .episode-thumbnail{width:126px!important;flex:0 0 126px!important}
+ #app .series-landscape-dialog .episode-copy{min-width:0!important}
+ #app .series-landscape-dialog .trailer-section{margin-top:24px!important}
+}
+@media (min-width:900px) and (max-height:680px) and (orientation:landscape){
+ #app .series-landscape-dialog>.cinematic-backdrop{height:210px!important}
+ #app .series-landscape-dialog>.cinematic-intro{padding-top:145px!important}
+}
+@media (min-width:900px) and (max-width:1100px) and (orientation:landscape){
+ #app .series-landscape-dialog{grid-template-columns:minmax(0,1fr) minmax(320px,.9fr)!important}
+ #app .series-landscape-dialog .episode-thumbnail{width:100px!important;flex-basis:100px!important}
+}
