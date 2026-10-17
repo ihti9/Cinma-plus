@@ -112,6 +112,11 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const iframe=document.createElement('iframe');iframe.src=`https://ani.pm/embed/ani/${aniId}/${ep}/sub`;
   iframe.title='Ani.pm — '+heading;iframe.dir='ltr';iframe.setAttribute('dir','ltr');iframe.style.cssText='width:100%;aspect-ratio:16/9;border:0;direction:ltr';iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media; screen-wake-lock';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';
   screen.appendChild(iframe);
+  // Keep subtitle controls and captions above the embedded player after each episode starts.
+  const subtitleDock=playerRoot.querySelector('#cinema-subtitle-dock');
+  if(subtitleDock)screen.appendChild(subtitleDock);
+  const subtitleOverlay=playerRoot.querySelector('#cinema-arabic-captions');
+  if(subtitleOverlay)screen.appendChild(subtitleOverlay);
   screen.style.cursor='auto';
   screen.removeAttribute('role');screen.removeAttribute('tabindex');screen.removeAttribute('aria-label');
  };
@@ -120,8 +125,27 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const status=playerRoot.querySelector('#cinema-subtitle-status');
   let cues=[],running=false,elapsed=0,started=0,frame=0;
   const overlay=document.createElement('div');
+  overlay.id='cinema-arabic-captions';
+  overlay.setAttribute('dir','rtl');
   overlay.setAttribute('aria-live','off');
   overlay.style.cssText='position:absolute;bottom:9%;left:6%;right:6%;z-index:8;pointer-events:none;text-align:center;color:white;font-size:clamp(15px,2.1vw,27px);font-weight:700;text-shadow:0 2px 5px black,0 0 9px black;white-space:pre-line;line-height:1.5';
+  const tool=playerRoot.querySelector('.cinema-subtitle-tool');
+  const dock=document.createElement('div');
+  dock.id='cinema-subtitle-dock';
+  dock.style.cssText='position:absolute;top:10px;right:10px;z-index:15;max-width:min(92%,340px);direction:rtl;color:white;font-size:13px';
+  const toggle=document.createElement('button');
+  toggle.type='button';toggle.textContent='🌐 ترجمة عربية';
+  toggle.setAttribute('aria-expanded','false');
+  toggle.style.cssText='background:#101827ee;color:white;border:1px solid #8192ae;border-radius:10px;padding:9px 12px;cursor:pointer;font-weight:700';
+  const panel=document.createElement('div');
+  panel.hidden=true;
+  panel.style.cssText='margin-top:6px;background:#101827f5;border:1px solid #55647c;border-radius:12px;padding:10px;max-height:50vh;overflow:auto;box-shadow:0 6px 24px #0009';
+  if(tool){tool.open=true;panel.appendChild(tool)}
+  toggle.onclick=e=>{e.stopPropagation();panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden))};
+  dock.append(toggle,panel);
+  screen.style.position='relative';
+  screen.appendChild(dock);
+  screen.appendChild(overlay);
   const time=t=>{const m=t.trim().match(/(?:(\\d+):)?(\\d{1,2}):(\\d{2})[,.](\\d{1,3})/);return m?(Number(m[1]||0)*3600+Number(m[2])*60+Number(m[3])+Number(m[4].padEnd(3,'0'))/1000)*1000:null};
   const paint=()=>{const now=running?elapsed+performance.now()-started:elapsed;const cue=cues.find(c=>c.start<=now&&c.end>=now);overlay.textContent=cue?.text||'';if(running)frame=requestAnimationFrame(paint)};
   const ensureOverlay=()=>{screen.style.position='relative';screen.appendChild(overlay)};
