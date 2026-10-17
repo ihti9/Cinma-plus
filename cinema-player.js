@@ -40,16 +40,16 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  closeCinemaPlayer();
  const key=mediaKey({type,id,season,episode});
  const vidsrcId=/^tt\d+$/.test(String(imdbId))?String(imdbId):/^\d+$/.test(String(id))?String(id):'';
- const vidsrcUrl=!isAnime&&vidsrcId?(type==='tv'
+ const vidsrcUrl=vidsrcId?(type==='tv'
   ?`https://vidsrc.sh/embed/tv/${vidsrcId}/${Number(season)}/${Number(episode)}?ds_lang=ar,en`
   :`https://vidsrc.sh/embed/movie/${vidsrcId}?ds_lang=ar,en`):'';
  const vidsrcSources=vidsrcUrl?[{id:'vidsrc-sh',name:'▶ VidSrc.sh',kind:'embed',url:vidsrcUrl}]:[];
  const vidlinkId=/^\d+$/.test(String(id))?String(id):'';
- const vidlinkUrl=!isAnime&&vidlinkId?(type==='tv'
+ const vidlinkUrl=vidlinkId?(type==='tv'
   ?`https://vidlink.pro/tv/${vidlinkId}/${Number(season)}/${Number(episode)}`
   :`https://vidlink.pro/movie/${vidlinkId}`):'';
  const vidlinkSources=vidlinkUrl?[{id:'vidlink',name:'▶ VidLink',kind:'embed',url:vidlinkUrl}]:[];
- const sources=[...vidsrcSources,...vidlinkSources,...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
+ const sources=[...(isAnime?[...vidlinkSources,...vidsrcSources]:[...vidsrcSources,...vidlinkSources]),...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
  const positions=safeRead(PLAYER_POSITION_KEY);
  const heading=type==='tv'?`${title} · الموسم ${season} الحلقة ${episode}`:title;
  playerRoot=document.createElement('div');
@@ -333,8 +333,12 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   }catch{addonStatus.textContent='تعذر الاتصال بالإضافة؛ قد تكون CORS غير مفعّلة.'}
  }
  if(!isAnime)loadAddon();
+ if(isAnime&&aniButton){
+  const fallback=document.createElement('button');fallback.type='button';fallback.dataset.server='ani-pm';fallback.textContent='▶ Ani.pm — احتياطي';fallback.disabled=aniButton.disabled;fallback.onclick=()=>{list.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn===fallback));aniButton.click()};
+  if(sources.length)list.appendChild(fallback);
+ }
  if(sources.length){
-  sources.forEach((source,index)=>{const button=document.createElement('button');button.type='button';button.dataset.server=source.id;button.textContent=source.name||`سيرفر ${index+1}`;button.onclick=()=>selectSource(source);list.appendChild(button)});
+  sources.forEach((source,index)=>{const button=document.createElement('button');button.type='button';button.dataset.server=source.id;button.textContent=source.name||`سيرفر ${index+1}`;button.onclick=()=>selectSource(source);if(isAnime&&aniButton)list.insertBefore(button,list.querySelector('[data-server="ani-pm"]'));else list.appendChild(button)});
   selectSource(sources[0]);
   return;
  }
