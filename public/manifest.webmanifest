@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "CINEMA+ | سينما بلس",
+  "short_name": "CINEMA+",
+  "description": "اكتشف الأفلام والمسلسلات والأنمي وتابع حلقاتك.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#090b12",
+  "icons": [
+    {
+      "src": "/icons/cinema-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
