@@ -345,7 +345,7 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   list.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn.dataset.server===String(source.id)));
   if(source.kind==='embed'){
    const iframe=document.createElement('iframe');
-   iframe.src=source.url;iframe.title='مشغّل '+heading;iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation allow-forms');
+   iframe.src=source.url;iframe.title='مشغّل '+heading;iframe.allow='autoplay; fullscreen; picture-in-picture; encrypted-media';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';// External embed providers may reject sandboxed frames; do not apply iframe sandbox here.
    screen.appendChild(iframe);
    return;
   }
