@@ -407,3 +407,32 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  #app>header .header-brand-search{gap:12px!important}
  #app>header .header-search{width:min(330px,46vw)!important}
 }
+
+
+/* v64 — streaming-style quick categories and illustrated episodes */
+.home-quick-filters{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:18px clamp(16px,4vw,55px) 8px;align-items:center}
+.home-quick-filters::-webkit-scrollbar{display:none}
+.home-quick-filters button{flex:0 0 auto;background:#1b2230;color:#f0f3fa;border:1px solid #394153;border-radius:13px;padding:12px 22px;font-size:14px;font-weight:800;min-height:44px}
+.home-quick-filters button:hover,.home-quick-filters button:focus-visible{background:#9f1931;border-color:#ed385e}
+.continue-poster{position:relative;overflow:hidden}
+.continue-progress-track{position:absolute;bottom:0;right:0;left:0;height:5px;background:rgba(255,255,255,.36);z-index:2}
+.continue-progress-track>span{display:block;width:34%;height:100%;background:#ed385e}
+.episode-grid .episode-card{display:flex;flex-direction:row;gap:14px;align-items:center;text-align:right;padding:10px;min-height:96px}
+.episode-thumbnail{position:relative;display:block;flex:0 0 142px;width:142px;aspect-ratio:16/9;background:#202a3b;border-radius:9px;overflow:hidden}
+.episode-thumbnail img{display:block;width:100%;height:100%;object-fit:cover}
+.episode-thumbnail-fallback{display:grid;place-items:center;width:100%;height:100%;color:#aab4c3}
+.episode-play-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:34px;height:34px;background:#10131ab8;border:1px solid #fff9;border-radius:50%;color:white;font-size:14px}
+.episode-copy{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.episode-copy strong{font-size:14px}
+.episode-copy span{font-size:13px;line-height:1.55}
+.episode-copy small{color:#a9b5c6}
+@media(max-width:699px){
+ .home-quick-filters{padding:13px 14px 8px;gap:8px}
+ .home-quick-filters button{padding:10px 16px;font-size:12px}
+ .episode-grid .episode-card{min-height:90px;gap:10px}
+ .episode-thumbnail{flex-basis:115px;width:115px}
+}
+@media(min-width:700px) and (max-width:1366px){
+ .episode-grid .episode-card{min-width:0}
+ .episode-thumbnail{flex-basis:112px;width:112px}
+}
