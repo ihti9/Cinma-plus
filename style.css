@@ -375,3 +375,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  #app>header nav .sidebar-brand small{display:block;font-size:11px;color:#9aa7bb}
  #app>header nav .sidebar-label{font-size:13px;color:#a7b2c2;padding:8px 12px}
 }
+
+
+/* v62.1 — Safari fix: nav is a child of header, so anchor it fixed outside the grid */
+@media (min-width:900px) and (max-width:1366px){
+ #app{grid-template-columns:210px minmax(0,1fr)!important}
+ #app>header nav{position:fixed!important;top:70px!important;right:0!important;left:auto!important;bottom:0!important;width:210px!important;height:calc(100dvh - 70px)!important;min-height:0!important;z-index:19}
+ #app>main{grid-column:2!important;grid-row:2!important}
+}
+@media (min-width:900px) and (max-width:1366px) and (orientation:portrait){
+ #app{grid-template-columns:180px minmax(0,1fr)!important}
+ #app>header nav{width:180px!important}
+}
