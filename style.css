@@ -762,3 +762,16 @@ body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 3
  #app>header .header-search.search-open input,#app>header .header-search:focus-within input{display:block!important;z-index:15!important;pointer-events:auto!important;opacity:1!important;visibility:visible!important}
 }
 @media(min-width:601px){#app>header .search-trigger{border:0;background:none;color:inherit;cursor:pointer;font-size:22px}}
+
+/* iPhone: single in-header search field; no floating duplicate */
+@media(max-width:600px){
+ #app>header{overflow:visible!important}
+ #app>header .header-brand-search{position:relative!important;min-height:54px!important}
+ #app>header .header-search{position:static!important;z-index:15!important;flex:0 0 44px!important}
+ #app>header .header-search input{display:none!important}
+ #app>header.search-active .header-brand-search>a.brand{visibility:hidden!important;pointer-events:none!important}
+ #app>header.search-active .header-search{position:absolute!important;inset:4px 0!important;width:100%!important;height:46px!important;min-width:0!important;display:flex!important;align-items:center!important;flex-direction:row-reverse!important;justify-content:space-between!important;gap:8px!important;background:#182733!important;border:1px solid #c9a45c!important;border-radius:14px!important;padding:0 11px!important;box-shadow:none!important}
+ #app>header.search-active .header-search input,#app>header.search-active .header-search:focus-within input{position:static!important;display:block!important;flex:1!important;width:100%!important;min-width:0!important;height:42px!important;padding:7px 3px!important;border:0!important;background:transparent!important;box-shadow:none!important;outline:none!important;color:#fff!important;font-size:16px!important;text-align:right!important;direction:rtl!important}
+ #app>header.search-active .search-trigger{flex:0 0 34px!important;width:34px!important;height:38px!important;font-size:25px!important}
+ #app>header:not(.search-active) .header-search input{display:none!important}
+}
