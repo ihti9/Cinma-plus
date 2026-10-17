@@ -667,3 +667,65 @@ body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 3
  .cinema-player-overlay .cinema-server-list button.active{background:var(--ios-gold)}
 }
 @media(min-width:601px){#app .ios-feature{display:none}}
+
+
+/* iPhone CINEMA+ universal design system: details, search, episodes and player */
+@media(max-width:600px){
+ :root{--cinema-accent:#f4c76f;--cinema-deep:#060c12;--cinema-panel:#101b27}
+ body,button,input,select,textarea{font-family:Cairo,system-ui,sans-serif}
+ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--cinema-accent);outline-offset:3px}
+ #app button.active,#app .watch-filters button.active{color:var(--cinema-accent)}
+ #app .editorial-shelf,#app .discovery-section,#app .home-collections{color:#f5f6fa}
+ #app .shelf-head small,#app .shelf-card small{color:#9caab7}
+ #app .watch-filters{display:flex;overflow-x:auto;gap:8px;scrollbar-width:none}
+ #app .watch-filters button{flex:none;border-radius:18px;background:#182632;border:1px solid #33434f;color:#d8e0e7;padding:8px 13px}
+ #app .watch-filters button.active{background:#3b3423;color:var(--cinema-accent);border-color:var(--cinema-accent)}
+ #app .search:not(.header-search){background:#182630;border-color:#33424d;border-radius:13px}
+ #app input,#app select{accent-color:var(--cinema-accent)}
+ .overlay{position:fixed!important;inset:0!important;z-index:100!important;background:#020509e8!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;overflow:hidden!important;padding:0!important}
+ .overlay .dialog,.overlay .cinematic-dialog,.overlay .series-landscape-dialog{position:relative!important;width:100%!important;max-width:100%!important;height:calc(100dvh - env(safe-area-inset-top,0px) - 8px)!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain;background:#080f18!important;border:0!important;border-radius:22px 22px 0 0!important;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))!important;box-shadow:0 -16px 70px #000b!important}
+ .overlay .dialog .close{position:sticky!important;top:12px!important;float:left!important;margin:12px 0 -52px 15px!important;z-index:20!important;width:42px!important;height:42px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:#0a1421e8!important;border:1px solid #ffffff24!important;color:#fff!important;font-size:28px!important;backdrop-filter:blur(12px)}
+ .overlay .cinematic-backdrop{height:240px!important;min-height:240px!important;width:100%!important;background-size:cover!important;background-position:center!important;border-radius:0!important;position:relative!important}
+ .overlay .cinematic-backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#080f18 0%,transparent 75%)}
+ .overlay .cinematic-intro{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;margin:-55px 0 0!important;padding:0 19px!important;position:relative!important;z-index:2!important;background:none!important}
+ .overlay .cinematic-poster{width:106px!important;max-width:106px!important;min-width:106px!important;height:155px!important;align-self:center!important;flex:none!important;margin:0 auto 15px!important;border:2px solid #46505d!important;border-radius:13px!important;overflow:hidden!important;box-shadow:0 8px 25px #0009!important}
+ .overlay .cinematic-poster img{width:100%!important;height:100%!important;object-fit:cover!important}
+ .overlay .cinematic-summary{width:100%!important;min-width:0!important;text-align:center!important;padding:0!important}
+ .overlay .cinematic-eyebrow{color:var(--cinema-accent)!important;font-size:12px!important;font-weight:900!important}
+ .overlay .cinematic-summary h2{color:#fff!important;font-size:clamp(23px,6.5vw,30px)!important;line-height:1.4!important;margin:10px 0!important;overflow-wrap:anywhere!important}
+ .overlay .cinematic-tagline{color:#bfc8d1!important;font-size:12px!important}
+ .overlay .cinematic-meta{display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:8px!important;margin:14px 0!important}
+ .overlay .cinematic-meta span{background:#1b2935!important;border:1px solid #34424e!important;border-radius:22px!important;padding:7px 13px!important;color:#dce3e9!important;font-size:12px!important}
+ .overlay .cinematic-meta span:first-child{color:var(--cinema-accent)!important}
+ .overlay .cinematic-genres{color:#c5a7b0!important;font-size:12px!important;line-height:1.8!important;margin:10px 0!important}
+ .overlay .cinematic-overview{color:#c5cdd6!important;font-size:13px!important;line-height:1.95!important;text-align:right!important;margin:18px 0!important}
+ .overlay .cinematic-summary .actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;width:100%!important;margin:18px 0!important;align-items:stretch!important}
+ .overlay .cinematic-summary .actions>.primary:first-child{grid-column:1/-1!important;background:var(--cinema-accent)!important;color:#10151b!important;font-weight:900!important;font-size:15px!important;min-height:50px!important;border-radius:13px!important}
+ .overlay .cinematic-summary .actions>#save{grid-column:1/-1!important;background:#1b2b37!important;color:var(--cinema-accent)!important;border:1px solid #41505a!important;min-height:47px!important;border-radius:13px!important;font-size:13px!important}
+ .overlay .cinematic-summary .actions>.secondary{background:#101b26!important;border:1px solid #364755!important;color:#e3e7eb!important;border-radius:12px!important;padding:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:44px!important;font-size:12px!important;text-decoration:none!important}
+ .overlay .watch-status-label{color:#aab5c0!important;font-size:12px!important;display:flex!important;flex-direction:column!important;gap:5px!important;align-items:stretch!important;justify-content:center!important}
+ .overlay .watch-status-label select,.overlay .netflix-season-picker select,.overlay #season-picker{background:#1c2b37!important;color:#f5f6f8!important;border:1px solid #455362!important;border-radius:11px!important;padding:9px!important;max-width:100%!important}
+ .overlay .cinematic-sections{background:#080f18!important;padding:10px 17px 24px!important;margin:0!important}
+ .overlay .cinematic-section{background:transparent!important;border-color:#263541!important;margin:12px 0!important;padding:12px 0!important}
+ .overlay .cinematic-section h3{color:#f8f8fa!important;font-size:19px!important}
+ .overlay .trailer-empty{color:#9cabb8!important}
+ .overlay .netflix-episodes-head{display:flex!important;gap:10px!important;flex-wrap:wrap!important;align-items:center!important;justify-content:space-between!important}
+ .overlay .episode-grid,.overlay .episode-list{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+ .overlay .episode-card{background:#13202b!important;border:1px solid #30404d!important;border-radius:14px!important;overflow:hidden!important;color:#f2f4f7!important;min-width:0!important}
+ .overlay .episode-card:hover,.overlay .episode-card:focus-visible{border-color:var(--cinema-accent)!important}
+ .overlay .episode-copy{min-width:0!important}
+ .overlay .episode-copy small{color:#a7b2bd!important}
+ .overlay .episode-play-icon{color:var(--cinema-accent)!important}
+ .overlay .episode-current{border-color:var(--cinema-accent)!important}
+ .overlay .primary,.overlay button.primary{background:var(--cinema-accent)!important;color:#10141a!important;border:0!important;border-radius:12px!important;font-weight:800!important}
+ .overlay .secondary{border-radius:12px!important}
+ .cinema-player-overlay{z-index:150!important;background:#05090ef5!important}
+ .cinema-player-overlay .cinema-player-shell{background:#09121c!important;border:1px solid #273b49!important;color:#f4f6f8!important;max-height:100dvh!important;overflow-y:auto!important}
+ .cinema-player-overlay .cinema-player-top{background:#0c1823!important;border-bottom:1px solid #253744!important}
+ .cinema-player-overlay .cinema-player-screen{background:#000!important;border:1px solid #263746!important;border-radius:12px!important;overflow:hidden!important}
+ .cinema-player-overlay .cinema-server-list button{background:#192835!important;color:#e7ebef!important;border:1px solid #344957!important;border-radius:12px!important}
+ .cinema-player-overlay .cinema-server-list button.active{background:var(--cinema-accent)!important;color:#0b1118!important;border-color:var(--cinema-accent)!important}
+ .cinema-player-overlay button:not(.active){accent-color:var(--cinema-accent)}
+ .cinema-player-overlay .cinema-watch-meta{color:#b9c5d0!important}
+ .cinema-player-overlay .cinema-player-note{color:#9caebd!important}
+}
