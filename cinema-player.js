@@ -39,7 +39,12 @@ let playerRoot=null;
 export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbId='',isAnime=false,anilistId=0,episodes=[],seasons=[],loadSeasonEpisodes}){
  closeCinemaPlayer();
  const key=mediaKey({type,id,season,episode});
- const sources=[...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
+ const vidsrcId=/^tt\\d+$/.test(String(imdbId))?String(imdbId):/^\\d+$/.test(String(id))?String(id):'';
+ const vidsrcUrl=!isAnime&&vidsrcId?(type==='tv'
+  ?`https://vidsrc.sh/embed/tv/${vidsrcId}/${Number(season)}/${Number(episode)}?ds_lang=ar,en`
+  :`https://vidsrc.sh/embed/movie/${vidsrcId}?ds_lang=ar,en`):'';
+ const vidsrcSources=vidsrcUrl?[{id:'vidsrc-sh',name:'▶ VidSrc.sh',kind:'embed',url:vidsrcUrl}]:[];
+ const sources=[...vidsrcSources,...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
  const positions=safeRead(PLAYER_POSITION_KEY);
  const heading=type==='tv'?`${title} · الموسم ${season} الحلقة ${episode}`:title;
  playerRoot=document.createElement('div');
