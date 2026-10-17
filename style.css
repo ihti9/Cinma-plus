@@ -775,3 +775,7 @@ body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 3
  #app>header.search-active .search-trigger{flex:0 0 34px!important;width:34px!important;height:38px!important;font-size:25px!important}
  #app>header:not(.search-active) .header-search input{display:none!important}
 }
+
+/* Suppress viewport rubber-band refresh on supported mobile browsers. */
+html,body{overscroll-behavior-y:none}
+@media(max-width:600px){#app{overscroll-behavior-y:none}#app>main{overscroll-behavior-y:contain}}
