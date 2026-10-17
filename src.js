@@ -139,6 +139,11 @@ async function animeMetadata(item){
  const key=item.id;
  if(animeCache.has(key))return animeCache.get(key);
  const result={};
+ // A verified manual mapping takes precedence over title-based matching.
+ try{
+  const saved=Number(JSON.parse(localStorage.getItem('cinema-anilist-links-v1')||'{}')['tv:'+key]||JSON.parse(localStorage.getItem('cinema-anilist-links-v1')||'{}')['movie:'+key]);
+  if(Number.isSafeInteger(saved)&&saved>0){result.anilistId=saved;animeCache.set(key,result);return result}
+ }catch(e){}
  const names=[item.original_name,item.name,item.english_name,item.english_title].filter(Boolean);
  const normalized=names.map(normalizedAnimeTitle).filter(Boolean);
  if(normalized.includes('onepiece')||normalized.includes('ワンピース')){result.anilistId=21;animeCache.set(key,result);return result}
@@ -394,7 +399,7 @@ async function show(id,type){
   try{localStorage.setItem('cinema_watchlist_v2',JSON.stringify(state.watchlist))}catch(e){console.warn('Unable to save watchlist',e)}
   close();render();show(id,type);
  };
- if(type==='movie'){document.querySelector('#open-movie-player').onclick=async()=>openCinemaPlayer({type:'movie',id,imdbId:await playerImdbId('movie',id),anilistId:isAnime(x)?(await animeMetadata(x)).anilistId:0,title:title(x),poster_path:x.backdrop_path||x.poster_path});}
+ if(type==='movie'){document.querySelector('#open-movie-player').onclick=async()=>openCinemaPlayer({type:'movie',id,imdbId:await playerImdbId('movie',id),isAnime:isAnime(x),anilistId:isAnime(x)?(await animeMetadata(x)).anilistId:0,title:title(x),poster_path:x.backdrop_path||x.poster_path});}
  document.querySelector('#save').onclick=()=>setWatchStatus(saved?'none':'plan');
  document.querySelector('#watch-status').onchange=e=>setWatchStatus(e.target.value);
 }
