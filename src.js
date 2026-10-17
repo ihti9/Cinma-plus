@@ -138,33 +138,36 @@ async function animeMetadata(item){
  const key=item.id;
  if(animeCache.has(key))return animeCache.get(key);
  const result={};
- // Bleach (2004) is AniList 269; do not confuse it with Thousand-Year Blood War.
- const animeNames=[item.original_name,item.name,item.english_name,item.english_title].map(normalizedAnimeTitle);
- // One Piece uses a Japanese TMDB original title; AniList identifies the original series as 21.
- if(animeNames.includes('onepiece')||animeNames.includes('ワンピース')){
-  result.anilistId=21;
-  animeCache.set(key,result);
-  return result;
- }
- if(animeNames.includes('bleach')&&!animeNames.some(n=>n.includes('thousandyearbloodwar')||n.includes('sennenkessenhen'))){
-  result.anilistId=269;
-  animeCache.set(key,result);
-  return result;
- }
+ const names=[item.original_name,item.name,item.english_name,item.english_title].filter(Boolean);
+ const normalized=names.map(normalizedAnimeTitle).filter(Boolean);
+ if(normalized.includes('onepiece')||normalized.includes('ワンピース')){result.anilistId=21;animeCache.set(key,result);return result}
+ if(normalized.includes('bleach')&&!normalized.some(n=>n.includes('thousandyearbloodwar')||n.includes('sennenkessenhen'))){result.anilistId=269;animeCache.set(key,result);return result}
+ const year=Number(String(item.first_air_date||item.release_date||'').slice(0,4));
+ const modern=year>=2020;
+ const query='query($search:String){Page(page:1,perPage:12){media(search:$search,type:ANIME){id idMal description(asHtml:false) startDate{year} title{romaji english native} synonyms}}}';
+ const searches=[...new Set(names)].filter(Boolean).slice(0,modern?4:1);
+ let best=null,bestScore=-1;
  try{
-  const query='query($search:String){Media(search:$search,type:ANIME){id idMal description(asHtml:false) title{romaji english native} synonyms}}';
-  const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,variables:{search:item.original_name||item.name}})});
-  if(r.ok){
-   const m=(await r.json()).data?.Media;
-   const candidates=[item.original_name,item.name,item.english_name,item.english_title].map(normalizedAnimeTitle).filter(Boolean);
-   if(m&&candidates.length&&[m.title?.romaji,m.title?.english,m.title?.native,...(m.synonyms||[])].some(t=>candidates.includes(normalizedAnimeTitle(t)))){
-    result.anilistId=m.id;
-    result.description=m.description?.replace(/<[^>]*>/g,' ').trim()||'';
-    if(m.idMal){
-     const jr=await fetch('https://api.jikan.moe/v4/anime/'+encodeURIComponent(m.idMal)+'/episodes?page=1');
-     if(jr.ok)result.episodes=(await jr.json()).data||[];
-    }
+  for(const search of searches){
+   const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,variables:{search}})});
+   if(!r.ok)continue;
+   const data=await r.json();
+   for(const m of data.data?.Page?.media||[]){
+    const aliases=[m.title?.romaji,m.title?.english,m.title?.native,...(m.synonyms||[])].map(normalizedAnimeTitle).filter(Boolean);
+    const exact=aliases.some(n=>normalized.includes(n));
+    if(!exact)continue;
+    const delta=year&&m.startDate?.year?Math.abs(year-m.startDate.year):null;
+    // Modern titles often have separate AniList entries for sequels; avoid mixing distant releases.
+    if(modern&&delta!==null&&delta>2)continue;
+    const score=100+(delta===null?0:Math.max(0,12-delta*5))+(aliases.includes(normalizedAnimeTitle(item.original_name))?4:0);
+    if(score>bestScore){best=m;bestScore=score}
    }
+   if(best&&(!modern||bestScore>=112))break;
+  }
+  if(best){
+   result.anilistId=best.id;
+   result.description=best.description?.replace(/<[^>]*>/g,' ').trim()||'';
+   // Episode playback must not wait for Jikan, which may be slow or rate-limited.
   }
  }catch(e){console.info('Anime metadata unavailable',e)}
  animeCache.set(key,result);return result;
