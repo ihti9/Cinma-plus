@@ -754,3 +754,11 @@ body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 3
  .overlay .cinematic-section h3{color:#f4c76f!important}
  .overlay .close{touch-action:manipulation}
 }
+
+/* Tap-friendly iPhone search control */
+@media(max-width:600px){
+ #app>header .header-search{position:relative;z-index:12;overflow:visible!important}
+ #app>header .search-trigger{display:grid!important;place-items:center!important;width:44px!important;height:44px!important;border:0!important;background:transparent!important;color:#fff!important;font-size:30px!important;cursor:pointer;touch-action:manipulation;position:relative;z-index:2}
+ #app>header .header-search.search-open input,#app>header .header-search:focus-within input{display:block!important;z-index:15!important;pointer-events:auto!important;opacity:1!important;visibility:visible!important}
+}
+@media(min-width:601px){#app>header .search-trigger{border:0;background:none;color:inherit;cursor:pointer;font-size:22px}}
