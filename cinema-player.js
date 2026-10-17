@@ -140,7 +140,25 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
   const panel=document.createElement('div');
   panel.hidden=true;
   panel.style.cssText='margin-top:6px;background:#101827f5;border:1px solid #55647c;border-radius:12px;padding:10px;max-height:50vh;overflow:auto;box-shadow:0 6px 24px #0009';
-  if(tool){tool.open=true;panel.appendChild(tool)}
+  if(tool){
+   tool.open=true;
+   panel.appendChild(tool);
+   // The Ani.pm iframe can be composited above overlay controls in iPad Safari.
+   // Put a second, always-visible entry point outside the video frame.
+   const toolbar=playerRoot.querySelector('.dexter-watch-toolbar');
+   const externalButton=document.createElement('button');
+   externalButton.type='button';
+   externalButton.textContent='🌐 الترجمة العربية';
+   externalButton.style.cssText='background:#233b63;color:#fff;border:1px solid #7c9fd2;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;min-height:42px';
+   externalButton.onclick=()=>{
+    if(dock.parentElement!==screen)screen.appendChild(dock);
+    panel.hidden=!panel.hidden;
+    toggle.setAttribute('aria-expanded',String(!panel.hidden));
+    if(!panel.hidden){const controls=playerRoot.querySelector('.cinema-player-controls');controls?.prepend(tool);tool.open=true;tool.scrollIntoView({block:'nearest',behavior:'smooth'})}
+    else panel.appendChild(tool);
+   };
+   toolbar?.appendChild(externalButton);
+  }
   toggle.onclick=e=>{e.stopPropagation();panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden))};
   dock.append(toggle,panel);
   screen.style.position='relative';
