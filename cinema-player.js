@@ -67,6 +67,14 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  const expandStyle=document.createElement('style');
  expandStyle.textContent='.cinema-expand-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 14px;color:#aab3c4;font-size:12px}.cinema-expand-controls button{background:#28364c;border:1px solid #65748d;color:white;border-radius:8px;padding:9px 15px;cursor:pointer}.cinema-player-overlay.cinema-expanded .cinema-player-shell{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;margin:0!important;border-radius:0!important;overflow:auto}.cinema-player-overlay.cinema-expanded .dexter-watch-content{display:block!important}.cinema-player-overlay.cinema-expanded .cinema-player-screen{height:min(78dvh,56.25vw)!important;min-height:300px;width:100%!important;aspect-ratio:auto!important}.cinema-player-overlay.cinema-expanded .cinema-player-screen iframe,.cinema-player-overlay.cinema-expanded .cinema-player-screen video{width:100%!important;height:100%!important;aspect-ratio:auto!important}@media(max-width:650px){.cinema-player-overlay.cinema-expanded .cinema-player-screen{height:55dvh!important;min-height:220px}}';
  playerRoot.appendChild(expandStyle);
+ const cleanControlsStyle=document.createElement('style');
+ cleanControlsStyle.textContent='.cinema-player-controls #cinema-demo-play,.cinema-player-controls #cinema-demo-play + p,.cinema-player-controls details:not(.cinema-subtitle-tool),.cinema-player-controls #cinema-addon-url,.cinema-player-controls #cinema-addon-save,.cinema-player-controls #cinema-addon-status,.cinema-player-controls .cinema-player-note{display:none!important}.cinema-player-controls #cinema-demo-play{display:none!important}';
+ playerRoot.appendChild(cleanControlsStyle);
+ const demoPanel=playerRoot.querySelector('#cinema-demo-play')?.parentElement;
+ if(demoPanel)demoPanel.style.display='none';
+ const addonPanel=playerRoot.querySelector('#cinema-addon-url')?.parentElement?.parentElement;
+ if(addonPanel)addonPanel.style.display='none';
+
  const list=playerRoot.querySelector('#cinema-server-list');
  const closeButton=playerRoot.querySelector('.cinema-player-close');
  closeButton.onclick=closeCinemaPlayer;
@@ -341,11 +349,11 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  }
  if(!isAnime)loadAddon();
  if(isAnime&&aniButton){
-  const fallback=document.createElement('button');fallback.type='button';fallback.dataset.server='ani-pm';fallback.textContent='▶ Ani.pm — احتياطي';fallback.disabled=aniButton.disabled;fallback.onclick=()=>{list.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn===fallback));aniButton.click()};
+  const fallback=document.createElement('button');fallback.type='button';fallback.dataset.server='ani-pm';fallback.textContent='سيرفر 3';fallback.disabled=aniButton.disabled;fallback.onclick=()=>{list.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',btn===fallback));aniButton.click()};
   if(sources.length)list.appendChild(fallback);
  }
  if(sources.length){
-  sources.forEach((source,index)=>{const button=document.createElement('button');button.type='button';button.dataset.server=source.id;button.textContent=source.name||`سيرفر ${index+1}`;button.onclick=()=>selectSource(source);if(isAnime&&aniButton)list.insertBefore(button,list.querySelector('[data-server="ani-pm"]'));else list.appendChild(button)});
+  sources.forEach((source,index)=>{const button=document.createElement('button');button.type='button';button.dataset.server=source.id;button.textContent=`سيرفر ${index+1}`;button.onclick=()=>selectSource(source);if(isAnime&&aniButton)list.insertBefore(button,list.querySelector('[data-server="ani-pm"]'));else list.appendChild(button)});
   selectSource(sources[0]);
   return;
  }
