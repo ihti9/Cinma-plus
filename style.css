@@ -335,3 +335,43 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
  #app .movie:hover{transform:none}
  #app button{touch-action:manipulation}
 }
+
+
+/* v62 — iPad layout rebuild: use tablet geometry instead of desktop fixed nav */
+#app .sidebar-brand,#app .sidebar-label{display:none}
+@media (min-width:900px) and (max-width:1366px){
+ #app{display:grid!important;grid-template-columns:minmax(0,1fr) 210px!important;grid-template-rows:70px minmax(0,1fr)!important;align-items:start}
+ #app>header{grid-column:1/-1!important;grid-row:1!important;height:70px!important;position:sticky;top:0;z-index:20;min-width:0;padding-inline:24px!important}
+ #app>header .header-brand-search{width:100%;justify-content:space-between}
+ #app>header .header-search{width:min(410px,55vw)!important}
+ #app>header nav{display:flex!important;position:sticky!important;grid-column:2;grid-row:2;top:70px!important;right:auto!important;bottom:auto!important;left:auto!important;width:210px!important;height:calc(100dvh - 70px);min-height:440px;padding:22px 12px!important;gap:8px!important;flex-direction:column!important;align-items:stretch!important;overflow-y:auto;background:#111724;border-left:1px solid #303a4c;box-shadow:none!important}
+ #app>header nav:before{display:none!important}
+ #app>header nav .sidebar-brand{display:block;color:#fff;font:900 21px Cairo,system-ui,sans-serif;padding:5px 10px 16px;white-space:nowrap}
+ #app>header nav .sidebar-brand span{color:#f12f48}
+ #app>header nav .sidebar-brand small{display:block;color:#a8b2c3;font-size:11px;font-weight:600;margin-top:4px}
+ #app>header nav .sidebar-label{display:block;color:#aab4c5;font-size:13px;font-weight:800;padding:10px 13px}
+ #app>header nav button{display:block!important;text-align:right!important;font-size:15px!important;font-weight:800;min-height:52px!important;padding:13px 16px!important;line-height:1.5;color:#d4d9e4}
+ #app>main{grid-column:1!important;grid-row:2!important;width:100%!important;min-width:0!important;overflow:hidden}
+ #app .hero{height:clamp(270px,29vw,345px)!important;min-height:0!important;margin:14px 16px 8px!important;border-radius:18px!important;padding:22px 5%!important;display:flex;align-items:center}
+ #app .hero-content{max-width:450px}
+ #app .hero h1{font-size:clamp(34px,4vw,52px)!important;line-height:1.22}
+ #app .hero p{font-size:14px!important;max-width:390px}
+ #app .catalog{padding:24px 18px!important}
+ #app .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important}
+ #app .movie h3{font-size:13px;line-height:1.5}
+ #app .mobile-bottom-nav{display:none!important}
+}
+@media (min-width:900px) and (max-width:1366px) and (orientation:portrait){
+ #app{grid-template-columns:minmax(0,1fr) 180px!important}
+ #app>header nav{width:180px!important}
+ #app .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ #app .hero{height:285px!important}
+}
+@media (min-width:1367px){
+ #app>header nav .sidebar-brand,#app>header nav .sidebar-label{display:block}
+ #app>header nav:before{display:none}
+ #app>header nav .sidebar-brand{color:#fff;font-weight:900;font-size:22px;padding:0 12px 16px}
+ #app>header nav .sidebar-brand span{color:#f12f48}
+ #app>header nav .sidebar-brand small{display:block;font-size:11px;color:#9aa7bb}
+ #app>header nav .sidebar-label{font-size:13px;color:#a7b2c2;padding:8px 12px}
+}
