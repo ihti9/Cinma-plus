@@ -729,3 +729,28 @@ body > #modal-root .series-landscape-dialog{margin:auto;max-width:calc(100vw - 3
  .cinema-player-overlay .cinema-watch-meta{color:#b9c5d0!important}
  .cinema-player-overlay .cinema-player-note{color:#9caebd!important}
 }
+
+
+/* iPhone detail sheet refinement: compact premium layout */
+@media(max-width:600px){
+ body:has(.overlay){overflow:hidden}
+ .overlay .cinematic-dialog,.overlay .series-landscape-dialog{height:calc(100dvh - env(safe-area-inset-top,0px))!important;scrollbar-width:none!important;-webkit-overflow-scrolling:touch!important}
+ .overlay .cinematic-backdrop{height:205px!important;min-height:205px!important;background-position:center 28%!important}
+ .overlay .cinematic-intro{margin:-43px 0 0!important;padding:0 19px!important}
+ .overlay .cinematic-poster{width:88px!important;min-width:88px!important;max-width:88px!important;height:132px!important;margin-bottom:11px!important;border-color:#d6ac60!important}
+ .overlay .cinematic-summary h2{font-size:clamp(21px,6vw,27px)!important;margin:5px 0 8px!important}
+ .overlay .cinematic-meta{margin:10px 0!important;gap:6px!important}
+ .overlay .cinematic-meta span{padding:5px 11px!important;background:#1a2833!important}
+ .overlay .cinematic-genres{color:#aab6c3!important;margin:7px 0!important}
+ .overlay .cinematic-overview{display:-webkit-box!important;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden!important;font-size:12px!important;line-height:1.85!important;margin:12px 0!important;position:relative}
+ .overlay .cinematic-overview:active,.overlay .cinematic-overview:focus{display:block!important;overflow:visible!important}
+ .overlay .cinematic-summary .actions{margin:13px 0!important;gap:8px!important}
+ .overlay .cinematic-summary .actions>.primary:first-child{box-shadow:0 7px 20px #f4c76f22!important}
+ .overlay .cinematic-summary .actions>#save{grid-column:auto!important}
+ .overlay .cinematic-summary .actions>.secondary{min-width:0!important}
+ .overlay .cinematic-summary .actions>.primary:not(:first-child){background:#192936!important;color:#f4c76f!important}
+ .overlay .cinematic-sections{padding:8px 17px calc(30px + env(safe-area-inset-bottom,0px))!important}
+ .overlay .cinematic-section{border-color:#283747!important}
+ .overlay .cinematic-section h3{color:#f4c76f!important}
+ .overlay .close{touch-action:manipulation}
+}
