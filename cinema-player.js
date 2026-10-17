@@ -40,10 +40,14 @@ export function openCinemaPlayer({type,id,title,season,episode,poster_path,imdbI
  closeCinemaPlayer();
  const key=mediaKey({type,id,season,episode});
  const vidsrcId=/^tt\d+$/.test(String(imdbId))?String(imdbId):/^\d+$/.test(String(id))?String(id):'';
- const vidsrcUrl=!isAnime&&vidsrcId?(type==='tv'
-  ?`https://vidsrc.sh/embed/tv/${vidsrcId}/${Number(season)}/${Number(episode)}?ds_lang=ar,en`
-  :`https://vidsrc.sh/embed/movie/${vidsrcId}?ds_lang=ar,en`):'';
- const vidsrcSources=vidsrcUrl?[{id:'vidsrc-sh',name:'▶ VidSrc.sh',kind:'embed',url:vidsrcUrl}]:[];
+ const makeEmbedUrl=(host)=>!isAnime&&vidsrcId?(type==='tv'
+  ?`https://${host}/embed/tv/${vidsrcId}/${Number(season)}/${Number(episode)}`
+  :`https://${host}/embed/movie/${vidsrcId}`):'';
+ const vidsrcSources=[
+  {id:'vidsrc-sh',name:'▶ السيرفر 1 — VidSrc.sh',kind:'embed',url:makeEmbedUrl('vidsrc.sh')+'?ds_lang=ar,en'},
+  {id:'vidsrc-link',name:'▶ السيرفر 2 — VidSrc.link',kind:'embed',url:makeEmbedUrl('vidsrc.link')},
+  {id:'vidsrc-hair',name:'▶ السيرفر 3 — VidSrc.hair',kind:'embed',url:makeEmbedUrl('vidsrc.hair')}
+ ].filter(source=>!isAnime&&vidsrcId&&safeSource(source));
  const sources=[...vidsrcSources,...librarySource(key),...(playbackSources[key]||[]).filter(safeSource)];
  const positions=safeRead(PLAYER_POSITION_KEY);
  const heading=type==='tv'?`${title} · الموسم ${season} الحلقة ${episode}`:title;
